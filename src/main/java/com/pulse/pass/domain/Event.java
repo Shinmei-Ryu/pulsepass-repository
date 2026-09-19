@@ -44,6 +44,9 @@ public class Event {
     @Column(name = "minimum_age", nullable = false)
     private Integer minimumAge;
 
+    @Column(name = "streaming_url", length = 500)
+    private String streamingUrl;
+
     @ManyToMany
     @JoinTable(
             name = "event_artists",
@@ -54,6 +57,8 @@ public class Event {
 
     @OneToMany(mappedBy = "event")
     private List<Ticket> tickets = new ArrayList<>();
+
+
 
     public Event() {
     }
@@ -110,6 +115,10 @@ public class Event {
         return minimumAge;
     }
 
+    public String getStreamingUrl() {
+        return streamingUrl;
+    }
+
     public Set<Artist> getArtists() {
         return artists;
     }
@@ -152,6 +161,10 @@ public class Event {
 
     public void setMinimumAge(Integer minimumAge) {
         this.minimumAge = minimumAge;
+    }
+
+    public void setStreamingUrl(String streamingUrl) {
+        this.streamingUrl = streamingUrl;
     }
 
     public void setArtists(Set<Artist> artists) {
