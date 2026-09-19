@@ -40,7 +40,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
             FROM Ticket t
             JOIN t.event e
             WHERE e.eventCode = :eventCode
-              AND t.status = com.pulsepass.domain.TicketStatus.PAID
+              AND t.status = com.pulse.pass.domain.TicketStatus.PAID
             """)
     long countPaidByEventCode(@Param("eventCode") String eventCode);
 }

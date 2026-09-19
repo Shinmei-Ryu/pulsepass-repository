@@ -55,7 +55,7 @@ public interface EventRepository extends JpaRepository<Event, Long> {
             FROM Event e
             JOIN e.venue v
             JOIN e.artists a
-            WHERE e.status = com.pulsepass.domain.EventStatus.PUBLISHED
+            WHERE e.status = com.pulse.pass.domain.EventStatus.PUBLISHED
               AND e.eventDate > :date
               AND v.city = :city
               AND LOWER(a.stageName) LIKE LOWER(CONCAT('%', :artistText, '%'))
