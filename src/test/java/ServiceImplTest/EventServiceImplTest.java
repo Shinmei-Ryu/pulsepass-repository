@@ -367,6 +367,38 @@ class EventServiceImplTest {
         verify(eventRepository).save(event);
     }
 
+    @Test
+    void addArtist_missingEvent_throwsResourceNotFound() {
+        // ARRANGE
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.addArtist(EVENT_CODE, 1L));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(ResourceNotFoundException.class);
+        verify(artistRepository, never()).findById(any());
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    void addArtist_missingArtist_throwsResourceNotFound() {
+        // ARRANGE
+        Event event = event(EventStatus.DRAFT, futureDate(), venue(true));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+        when(artistRepository.findById(99L)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.addArtist(EVENT_CODE, 99L));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining("99");
+        assertThat(event.getArtists()).isEmpty();
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
