@@ -4,6 +4,7 @@ import com.pulse.pass.domain.User;
 import com.pulse.pass.domain.UserProfile;
 import com.pulse.pass.dto.request.RegisterUserRequest;
 import com.pulse.pass.dto.response.UserResponse;
+import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.mapper.UserMapper;
 import com.pulse.pass.repository.UserProfileRepository;
 import com.pulse.pass.repository.UserRepository;
@@ -20,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -84,6 +86,25 @@ public class UserServiceImplTest {
 
         assertThat(result).isEqualTo(expected);
         verify(mapper).toResponse(savedUser);
+    }
+
+    @Test
+    @DisplayName("TEST-USER-002 / BR-USER-001: duplicated username throws DuplicateResourceException")
+    void register_duplicatedUsername_throwsDuplicateResource() {
+        // ARRANGE
+        RegisterUserRequest request = registerRequest(LocalDate.of(2000, 5, 10));
+        when(userRepository.existsByUsername(USERNAME)).thenReturn(true);
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.register(request));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining(USERNAME);
+        verify(userRepository, never()).existsByEmailIgnoreCase(anyString());
+        verify(userRepository, never()).save(any(User.class));
+        verify(userProfileRepository, never()).save(any(UserProfile.class));
     }
 
 
