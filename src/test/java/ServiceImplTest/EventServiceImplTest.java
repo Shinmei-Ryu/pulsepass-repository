@@ -260,6 +260,29 @@ class EventServiceImplTest {
     }
 
     // ------------------------------------------------------------------
+    // publish
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-EVENT-007: valid DRAFT event becomes PUBLISHED")
+    void publish_validDraftEvent_becomesPublished() {
+        // ARRANGE
+        Event event = event(EventStatus.DRAFT, futureDate(), venue(true));
+        EventResponse expected = eventResponse(EventStatus.PUBLISHED);
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+        when(eventRepository.save(event)).thenReturn(event);
+        when(mapper.toResponse(event)).thenReturn(expected);
+
+        // ACT
+        EventResponse result = service.publish(EVENT_CODE);
+
+        // ASSERT
+        assertThat(event.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+        assertThat(result).isEqualTo(expected);
+        verify(eventRepository).save(event);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
