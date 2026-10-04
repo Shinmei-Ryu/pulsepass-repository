@@ -418,6 +418,25 @@ class EventServiceImplTest {
         verify(eventRepository, never()).save(any(Event.class));
     }
 
+    @ParameterizedTest
+    @EnumSource(value = EventStatus.class, names = {"CANCELLED", "FINISHED"})
+    @DisplayName("BR-EVENT-011: cannot add artists to CANCELLED or FINISHED events")
+    void addArtist_cancelledOrFinishedEvent_throwsBusinessRule(EventStatus status) {
+        // ARRANGE
+        Event event = event(status, futureDate(), venue(true));
+        Artist artist = artist(1L, "Solar Beat");
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+        when(artistRepository.findById(1L)).thenReturn(Optional.of(artist));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.addArtist(EVENT_CODE, 1L));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(event.getArtists()).isEmpty();
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
