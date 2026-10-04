@@ -314,6 +314,22 @@ class EventServiceImplTest {
         verify(eventRepository, never()).save(any(Event.class));
     }
 
+    @Test
+    @DisplayName("BR-EVENT-008: DRAFT event with past date cannot be published")
+    void publish_pastDate_throwsBusinessRule() {
+        // ARRANGE
+        Event event = event(EventStatus.DRAFT, LocalDateTime.now().minusDays(1), venue(true));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.publish(EVENT_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(event.getStatus()).isEqualTo(EventStatus.DRAFT);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
