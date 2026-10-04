@@ -1,4 +1,4 @@
-package ServiceImplTest;
+package com.pulse.pass.service;
 
 import com.pulse.pass.domain.*;
 import com.pulse.pass.dto.request.CreateEventRequest;
