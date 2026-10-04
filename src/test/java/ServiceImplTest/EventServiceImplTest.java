@@ -18,6 +18,8 @@ import com.pulse.pass.service.impl.EventServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -292,6 +294,23 @@ class EventServiceImplTest {
 
         // ASSERT
         assertThat(thrown).isInstanceOf(ResourceNotFoundException.class);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = EventStatus.class, names = {"PUBLISHED", "SOLD_OUT", "CANCELLED", "FINISHED"})
+    @DisplayName("TEST-EVENT-008 / BR-EVENT-007: non-DRAFT event throws BusinessRuleException and is not persisted")
+    void publish_nonDraftEvent_throwsBusinessRuleAndDoesNotPersist(EventStatus status) {
+        // ARRANGE
+        Event event = event(status, futureDate(), venue(true));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.publish(EVENT_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(event.getStatus()).isEqualTo(status);
         verify(eventRepository, never()).save(any(Event.class));
     }
 
