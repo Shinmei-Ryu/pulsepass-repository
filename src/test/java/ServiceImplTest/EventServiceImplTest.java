@@ -5,6 +5,7 @@ import com.pulse.pass.domain.EventCategory;
 import com.pulse.pass.domain.EventStatus;
 import com.pulse.pass.domain.Venue;
 import com.pulse.pass.dto.response.EventResponse;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.mapper.EventMapper;
 import com.pulse.pass.repository.ArtistRepository;
 import com.pulse.pass.repository.EventRepository;
@@ -22,6 +23,9 @@ import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 
@@ -66,6 +70,22 @@ class EventServiceImplTest {
         assertThat(result).isEqualTo(expected);
         verify(eventRepository).findByEventCode(EVENT_CODE);
         verify(mapper).toResponse(event);
+    }
+
+    @Test
+    @DisplayName("TEST-EVENT-002: missing event throws ResourceNotFoundException")
+    void findByCode_missingEvent_throwsResourceNotFound() {
+        // ARRANGE
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.findByCode(EVENT_CODE));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(EVENT_CODE);
+        verify(mapper, never()).toResponse(any(Event.class));
     }
 
     // ------------------------------------------------------------------
