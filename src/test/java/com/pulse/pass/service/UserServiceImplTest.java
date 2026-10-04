@@ -181,6 +181,26 @@ public class UserServiceImplTest {
         verify(mapper, never()).toResponse(any(User.class));
     }
 
+    // ------------------------------------------------------------------
+    // findByUsername
+    // ------------------------------------------------------------------
+
+    @Test
+    void findByUsername_existingUser_returnsDto() {
+        // ARRANGE
+        User user = new User(USERNAME, EMAIL, true);
+        UserResponse expected = userResponse();
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.of(user));
+        when(mapper.toResponse(user)).thenReturn(expected);
+
+        // ACT
+        UserResponse result = service.findByUsername(USERNAME);
+
+        // ASSERT
+        assertThat(result).isEqualTo(expected);
+        verify(userRepository).findByUsername(USERNAME);
+    }
+
 
     // ------------------------------------------------------------------
     // Helpers
