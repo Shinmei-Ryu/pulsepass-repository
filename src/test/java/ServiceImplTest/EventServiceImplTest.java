@@ -155,6 +155,25 @@ class EventServiceImplTest {
         assertThat(result).isEqualTo(expected);
     }
 
+    @Test
+    @DisplayName("BR-EVENT-006: minimumAge 0 means no restriction and is accepted")
+    void create_minimumAgeZero_isAccepted() {
+        // ARRANGE
+        CreateEventRequest request = createRequest(futureDate(), 0);
+        when(eventRepository.existsByEventCode(EVENT_CODE)).thenReturn(false);
+        when(venueRepository.findByCode(VENUE_CODE)).thenReturn(Optional.of(venue(true)));
+        when(eventRepository.save(any(Event.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(mapper.toResponse(any(Event.class))).thenReturn(eventResponse(EventStatus.DRAFT));
+
+        // ACT
+        service.create(request);
+
+        // ASSERT
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(eventRepository).save(captor.capture());
+        assertThat(captor.getValue().getMinimumAge()).isZero();
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
