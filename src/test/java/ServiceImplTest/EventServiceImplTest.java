@@ -243,6 +243,22 @@ class EventServiceImplTest {
         verify(eventRepository, never()).save(any(Event.class));
     }
 
+    @Test
+    @DisplayName("BR-EVENT-006: negative minimumAge throws BusinessRuleException")
+    void create_negativeMinimumAge_throwsBusinessRule() {
+        // ARRANGE
+        CreateEventRequest request = createRequest(futureDate(), -1);
+        when(eventRepository.existsByEventCode(EVENT_CODE)).thenReturn(false);
+        when(venueRepository.findByCode(VENUE_CODE)).thenReturn(Optional.of(venue(true)));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.create(request));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
