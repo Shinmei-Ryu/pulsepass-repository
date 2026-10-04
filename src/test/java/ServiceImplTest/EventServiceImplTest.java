@@ -5,6 +5,7 @@ import com.pulse.pass.domain.EventCategory;
 import com.pulse.pass.domain.EventStatus;
 import com.pulse.pass.domain.Venue;
 import com.pulse.pass.dto.response.EventResponse;
+import com.pulse.pass.dto.response.EventSummaryResponse;
 import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.mapper.EventMapper;
 import com.pulse.pass.repository.ArtistRepository;
@@ -25,6 +26,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -88,6 +90,23 @@ class EventServiceImplTest {
         verify(mapper, never()).toResponse(any(Event.class));
     }
 
+    @Test
+    void findPublishedEvents_returnsMappedSummaries() {
+        // ARRANGE
+        Event event = event(EventStatus.PUBLISHED, futureDate(), venue(true));
+        EventSummaryResponse summary = eventSummary();
+        when(eventRepository.findByStatusOrderByEventDateAsc(EventStatus.PUBLISHED))
+                .thenReturn(List.of(event));
+        when(mapper.toSummary(event)).thenReturn(summary);
+
+        // ACT
+        List<EventSummaryResponse> result = service.findPublishedEvents();
+
+        // ASSERT
+        assertThat(result).containsExactly(summary);
+        verify(eventRepository).findByStatusOrderByEventDateAsc(eq(EventStatus.PUBLISHED));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
@@ -112,6 +131,11 @@ class EventServiceImplTest {
         return new EventResponse(1L, EVENT_CODE, "Caribbean Music Fest 2026", "Festival de musica",
                 EventCategory.MUSIC, status, futureDate(), 18, VENUE_CODE,
                 "Marina Convention Center", List.of());
+    }
+
+    private EventSummaryResponse eventSummary() {
+        return new EventSummaryResponse(1L, EVENT_CODE, "Caribbean Music Fest 2026",
+                EventCategory.MUSIC, EventStatus.PUBLISHED, futureDate(), "Marina Convention Center");
     }
 
 
