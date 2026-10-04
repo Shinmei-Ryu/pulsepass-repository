@@ -20,6 +20,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
 import java.time.LocalDate;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -142,6 +143,26 @@ public class UserServiceImplTest {
         assertThat(thrown).isInstanceOf(BusinessRuleException.class);
         verify(userRepository, never()).save(any(User.class));
         verify(userProfileRepository, never()).save(any(UserProfile.class));
+    }
+
+    // ------------------------------------------------------------------
+    // findByEmail
+    // ------------------------------------------------------------------
+
+    @Test
+    void findByEmail_existingUser_returnsDto() {
+        // ARRANGE
+        User user = new User(USERNAME, EMAIL, true);
+        UserResponse expected = userResponse();
+        when(userRepository.findByEmailIgnoreCase(eq(EMAIL))).thenReturn(Optional.of(user));
+        when(mapper.toResponse(user)).thenReturn(expected);
+
+        // ACT
+        UserResponse result = service.findByEmail(EMAIL);
+
+        // ASSERT
+        assertThat(result).isEqualTo(expected);
+        verify(userRepository).findByEmailIgnoreCase(EMAIL);
     }
 
 
