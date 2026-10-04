@@ -192,6 +192,24 @@ class EventServiceImplTest {
         verify(eventRepository, never()).save(any(Event.class));
     }
 
+    @Test
+    @DisplayName("TEST-EVENT-004: missing venue throws ResourceNotFoundException and never saves")
+    void create_missingVenue_throwsResourceNotFoundAndNeverSaves() {
+        // ARRANGE
+        CreateEventRequest request = createRequest(futureDate(), 18);
+        when(eventRepository.existsByEventCode(EVENT_CODE)).thenReturn(false);
+        when(venueRepository.findByCode(VENUE_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.create(request));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(VENUE_CODE);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
