@@ -107,6 +107,20 @@ class EventServiceImplTest {
         verify(eventRepository).findByStatusOrderByEventDateAsc(eq(EventStatus.PUBLISHED));
     }
 
+    @Test
+    void findPublishedEvents_noEvents_returnsEmptyList() {
+        // ARRANGE
+        when(eventRepository.findByStatusOrderByEventDateAsc(EventStatus.PUBLISHED))
+                .thenReturn(List.of());
+
+        // ACT
+        List<EventSummaryResponse> result = service.findPublishedEvents();
+
+        // ASSERT
+        assertThat(result).isEmpty();
+        verify(mapper, never()).toSummary(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
