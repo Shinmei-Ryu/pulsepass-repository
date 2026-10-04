@@ -4,6 +4,7 @@ import com.pulse.pass.domain.Event;
 import com.pulse.pass.domain.EventCategory;
 import com.pulse.pass.domain.EventStatus;
 import com.pulse.pass.domain.Venue;
+import com.pulse.pass.dto.request.CreateEventRequest;
 import com.pulse.pass.dto.response.EventResponse;
 import com.pulse.pass.dto.response.EventSummaryResponse;
 import com.pulse.pass.exception.ResourceNotFoundException;
@@ -15,6 +16,7 @@ import com.pulse.pass.service.impl.EventServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -122,6 +124,38 @@ class EventServiceImplTest {
     }
 
     // ------------------------------------------------------------------
+    // create
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-EVENT-003 / BR-EVENT-005: valid request saves event as DRAFT")
+    void create_validRequest_savesDraftEvent() {
+        // ARRANGE
+        Venue venue = venue(true);
+        CreateEventRequest request = createRequest(futureDate(), 18);
+        EventResponse expected = eventResponse(EventStatus.DRAFT);
+        when(eventRepository.existsByEventCode(EVENT_CODE)).thenReturn(false);
+        when(venueRepository.findByCode(eq(VENUE_CODE))).thenReturn(Optional.of(venue));
+        when(eventRepository.save(any(Event.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(mapper.toResponse(any(Event.class))).thenReturn(expected);
+
+        // ACT
+        EventResponse result = service.create(request);
+
+        // ASSERT
+        ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
+        verify(eventRepository).save(captor.capture());
+        Event saved = captor.getValue();
+        assertThat(saved.getStatus()).isEqualTo(EventStatus.DRAFT);
+        assertThat(saved.getEventCode()).isEqualTo(EVENT_CODE);
+        assertThat(saved.getName()).isEqualTo(request.name());
+        assertThat(saved.getCategory()).isEqualTo(EventCategory.MUSIC);
+        assertThat(saved.getMinimumAge()).isEqualTo(18);
+        assertThat(saved.getVenue()).isSameAs(venue);
+        assertThat(result).isEqualTo(expected);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
@@ -139,6 +173,11 @@ class EventServiceImplTest {
                 EventCategory.MUSIC, status, date, 18);
         event.setVenue(venue);
         return event;
+    }
+
+    private CreateEventRequest createRequest(LocalDateTime date, Integer minimumAge) {
+        return new CreateEventRequest(EVENT_CODE, "Caribbean Music Fest 2026", "Festival de musica",
+                EventCategory.MUSIC, date, minimumAge, VENUE_CODE);
     }
 
     private EventResponse eventResponse(EventStatus status) {
