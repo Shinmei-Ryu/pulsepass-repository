@@ -4,6 +4,7 @@ import com.pulse.pass.domain.User;
 import com.pulse.pass.domain.UserProfile;
 import com.pulse.pass.dto.request.RegisterUserRequest;
 import com.pulse.pass.dto.response.UserResponse;
+import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.mapper.UserMapper;
 import com.pulse.pass.repository.UserProfileRepository;
@@ -122,6 +123,23 @@ public class UserServiceImplTest {
         assertThat(thrown)
                 .isInstanceOf(DuplicateResourceException.class)
                 .hasMessageContaining(EMAIL);
+        verify(userRepository, never()).save(any(User.class));
+        verify(userProfileRepository, never()).save(any(UserProfile.class));
+    }
+
+    @Test
+    @DisplayName("TEST-USER-004 / BR-USER-005: future birth date throws BusinessRuleException")
+    void register_futureBirthDate_throwsBusinessRule() {
+        // ARRANGE
+        RegisterUserRequest request = registerRequest(LocalDate.now().plusDays(1));
+        when(userRepository.existsByUsername(USERNAME)).thenReturn(false);
+        when(userRepository.existsByEmailIgnoreCase(EMAIL)).thenReturn(false);
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.register(request));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
         verify(userRepository, never()).save(any(User.class));
         verify(userProfileRepository, never()).save(any(UserProfile.class));
     }
