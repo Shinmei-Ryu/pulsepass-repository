@@ -201,6 +201,21 @@ public class UserServiceImplTest {
         verify(userRepository).findByUsername(USERNAME);
     }
 
+    @Test
+    void findByUsername_missingUser_throwsResourceNotFound() {
+        // ARRANGE
+        when(userRepository.findByUsername(USERNAME)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.findByUsername(USERNAME));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(USERNAME);
+        verify(mapper, never()).toResponse(any(User.class));
+    }
+
 
     // ------------------------------------------------------------------
     // Helpers
