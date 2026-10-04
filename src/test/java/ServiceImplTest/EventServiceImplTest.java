@@ -437,6 +437,22 @@ class EventServiceImplTest {
         verify(eventRepository, never()).save(any(Event.class));
     }
 
+    @Test
+    void findByArtist_returnsMappedSummaries() {
+        // ARRANGE
+        Event event = event(EventStatus.PUBLISHED, futureDate(), venue(true));
+        EventSummaryResponse summary = eventSummary();
+        when(eventRepository.findByArtistStageName("Solar Beat")).thenReturn(List.of(event));
+        when(mapper.toSummary(event)).thenReturn(summary);
+
+        // ACT
+        List<EventSummaryResponse> result = service.findByArtist("Solar Beat");
+
+        // ASSERT
+        assertThat(result).containsExactly(summary);
+        verify(eventRepository).findByArtistStageName("Solar Beat");
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
