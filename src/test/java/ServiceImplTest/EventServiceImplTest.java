@@ -1,9 +1,6 @@
 package ServiceImplTest;
 
-import com.pulse.pass.domain.Event;
-import com.pulse.pass.domain.EventCategory;
-import com.pulse.pass.domain.EventStatus;
-import com.pulse.pass.domain.Venue;
+import com.pulse.pass.domain.*;
 import com.pulse.pass.dto.request.CreateEventRequest;
 import com.pulse.pass.dto.response.EventResponse;
 import com.pulse.pass.dto.response.EventSummaryResponse;
@@ -347,6 +344,30 @@ class EventServiceImplTest {
     }
 
     // ------------------------------------------------------------------
+    // addArtist (FR-SVC-007 / BR-EVENT-010..011)
+    // ------------------------------------------------------------------
+
+    @Test
+    void addArtist_validEventAndArtist_associatesArtist() {
+        // ARRANGE
+        Event event = event(EventStatus.DRAFT, futureDate(), venue(true));
+        Artist artist = artist(1L, "Solar Beat");
+        EventResponse expected = eventResponse(EventStatus.DRAFT);
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+        when(artistRepository.findById(eq(1L))).thenReturn(Optional.of(artist));
+        when(eventRepository.save(event)).thenReturn(event);
+        when(mapper.toResponse(event)).thenReturn(expected);
+
+        // ACT
+        EventResponse result = service.addArtist(EVENT_CODE, 1L);
+
+        // ASSERT
+        assertThat(event.getArtists()).containsExactly(artist);
+        assertThat(result).isEqualTo(expected);
+        verify(eventRepository).save(event);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
@@ -364,6 +385,12 @@ class EventServiceImplTest {
                 EventCategory.MUSIC, status, date, 18);
         event.setVenue(venue);
         return event;
+    }
+
+    private Artist artist(Long id, String stageName) {
+        Artist artist = new Artist(stageName, "Colombia", "Pop", true);
+        artist.setId(id);
+        return artist;
     }
 
     private CreateEventRequest createRequest(LocalDateTime date, Integer minimumAge) {
