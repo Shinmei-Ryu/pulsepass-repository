@@ -282,6 +282,19 @@ class EventServiceImplTest {
         verify(eventRepository).save(event);
     }
 
+    @Test
+    void publish_missingEvent_throwsResourceNotFound() {
+        // ARRANGE
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.publish(EVENT_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(ResourceNotFoundException.class);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
