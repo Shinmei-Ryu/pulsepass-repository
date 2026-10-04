@@ -399,6 +399,25 @@ class EventServiceImplTest {
         verify(eventRepository, never()).save(any(Event.class));
     }
 
+    @Test
+    @DisplayName("BR-EVENT-010: same artist cannot be associated twice")
+    void addArtist_duplicatedArtist_throwsBusinessRule() {
+        // ARRANGE
+        Event event = event(EventStatus.DRAFT, futureDate(), venue(true));
+        Artist artist = artist(1L, "Solar Beat");
+        event.addArtist(artist);
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+        when(artistRepository.findById(1L)).thenReturn(Optional.of(artist));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.addArtist(EVENT_CODE, 1L));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(event.getArtists()).hasSize(1);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
