@@ -107,6 +107,25 @@ public class UserServiceImplTest {
         verify(userProfileRepository, never()).save(any(UserProfile.class));
     }
 
+    @Test
+    @DisplayName("TEST-USER-003 / BR-USER-002: duplicated email throws DuplicateResourceException")
+    void register_duplicatedEmail_throwsDuplicateResource() {
+        // ARRANGE
+        RegisterUserRequest request = registerRequest(LocalDate.of(2000, 5, 10));
+        when(userRepository.existsByUsername(USERNAME)).thenReturn(false);
+        when(userRepository.existsByEmailIgnoreCase(EMAIL)).thenReturn(true);
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.register(request));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining(EMAIL);
+        verify(userRepository, never()).save(any(User.class));
+        verify(userProfileRepository, never()).save(any(UserProfile.class));
+    }
+
 
     // ------------------------------------------------------------------
     // Helpers
