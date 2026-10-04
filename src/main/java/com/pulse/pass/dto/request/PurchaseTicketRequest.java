@@ -1,4 +1,10 @@
 package com.pulse.pass.dto.request;
 
-public record PurchaseTicketRequest() {
+import com.pulse.pass.domain.TicketType;
+
+public record PurchaseTicketRequest(
+        String userEmail,
+        String eventCode,
+        TicketType type
+) {
 }
