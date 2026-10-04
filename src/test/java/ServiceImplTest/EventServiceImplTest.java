@@ -330,6 +330,22 @@ class EventServiceImplTest {
         verify(eventRepository, never()).save(any(Event.class));
     }
 
+    @Test
+    @DisplayName("BR-EVENT-009: DRAFT event with inactive venue cannot be published")
+    void publish_inactiveVenue_throwsBusinessRule() {
+        // ARRANGE
+        Event event = event(EventStatus.DRAFT, futureDate(), venue(false));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.publish(EVENT_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(event.getStatus()).isEqualTo(EventStatus.DRAFT);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
