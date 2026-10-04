@@ -7,6 +7,7 @@ import com.pulse.pass.domain.Venue;
 import com.pulse.pass.dto.request.CreateEventRequest;
 import com.pulse.pass.dto.response.EventResponse;
 import com.pulse.pass.dto.response.EventSummaryResponse;
+import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.mapper.EventMapper;
 import com.pulse.pass.repository.ArtistRepository;
@@ -27,8 +28,7 @@ import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
-import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
@@ -172,6 +172,24 @@ class EventServiceImplTest {
         ArgumentCaptor<Event> captor = ArgumentCaptor.forClass(Event.class);
         verify(eventRepository).save(captor.capture());
         assertThat(captor.getValue().getMinimumAge()).isZero();
+    }
+
+    @Test
+    @DisplayName("BR-EVENT-001: duplicated eventCode throws DuplicateResourceException")
+    void create_duplicatedEventCode_throwsDuplicateResource() {
+        // ARRANGE
+        CreateEventRequest request = createRequest(futureDate(), 18);
+        when(eventRepository.existsByEventCode(EVENT_CODE)).thenReturn(true);
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.create(request));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(DuplicateResourceException.class)
+                .hasMessageContaining(EVENT_CODE);
+        verify(venueRepository, never()).findByCode(anyString());
+        verify(eventRepository, never()).save(any(Event.class));
     }
 
     // ------------------------------------------------------------------
