@@ -6,6 +6,7 @@ import com.pulse.pass.dto.request.RegisterUserRequest;
 import com.pulse.pass.dto.response.UserResponse;
 import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.DuplicateResourceException;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.mapper.UserMapper;
 import com.pulse.pass.repository.UserProfileRepository;
 import com.pulse.pass.repository.UserRepository;
@@ -163,6 +164,21 @@ public class UserServiceImplTest {
         // ASSERT
         assertThat(result).isEqualTo(expected);
         verify(userRepository).findByEmailIgnoreCase(EMAIL);
+    }
+
+    @Test
+    void findByEmail_missingUser_throwsResourceNotFound() {
+        // ARRANGE
+        when(userRepository.findByEmailIgnoreCase(EMAIL)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.findByEmail(EMAIL));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(EMAIL);
+        verify(mapper, never()).toResponse(any(User.class));
     }
 
 
