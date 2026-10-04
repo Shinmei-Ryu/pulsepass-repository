@@ -7,6 +7,7 @@ import com.pulse.pass.domain.Venue;
 import com.pulse.pass.dto.request.CreateEventRequest;
 import com.pulse.pass.dto.response.EventResponse;
 import com.pulse.pass.dto.response.EventSummaryResponse;
+import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.mapper.EventMapper;
@@ -207,6 +208,22 @@ class EventServiceImplTest {
         assertThat(thrown)
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(VENUE_CODE);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @Test
+    @DisplayName("TEST-EVENT-005: inactive venue throws BusinessRuleException")
+    void create_inactiveVenue_throwsBusinessRule() {
+        // ARRANGE
+        CreateEventRequest request = createRequest(futureDate(), 18);
+        when(eventRepository.existsByEventCode(EVENT_CODE)).thenReturn(false);
+        when(venueRepository.findByCode(VENUE_CODE)).thenReturn(Optional.of(venue(false)));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.create(request));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
         verify(eventRepository, never()).save(any(Event.class));
     }
 
