@@ -159,6 +159,22 @@ class TicketServiceImplTest {
         inOrder.verify(eventRepository).save(event);
     }
 
+    @Test
+    @DisplayName("BR-TICKET-008: purchase that does not fill capacity keeps event PUBLISHED")
+    void purchase_notLastTicket_keepsEventPublished() {
+        // ARRANGE
+        Event event = publishedEvent(18);
+        User user = user(true, birthDateForAge(event, 30));
+        givenPurchaseScenario(user, event, CAPACITY - 2L, ticketResponse(TicketStatus.PAID));
+
+        // ACT
+        service.purchase(purchaseRequest(TicketType.GENERAL));
+
+        // ASSERT
+        assertThat(event.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
