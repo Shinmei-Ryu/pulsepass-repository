@@ -434,6 +434,25 @@ class TicketServiceImplTest {
     }
 
     // ------------------------------------------------------------------
+    // queries
+    // ------------------------------------------------------------------
+
+    @Test
+    void findByCode_existingTicket_returnsDto() {
+        // ARRANGE
+        Ticket ticket = ticket(TicketStatus.PAID, publishedEvent(18));
+        TicketResponse expected = ticketResponse(TicketStatus.PAID);
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.of(ticket));
+        when(mapper.toResponse(ticket)).thenReturn(expected);
+
+        // ACT
+        TicketResponse result = service.findByCode(TICKET_CODE);
+
+        // ASSERT
+        assertThat(result).isEqualTo(expected);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
