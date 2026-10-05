@@ -14,6 +14,7 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
+import org.mockito.InOrder;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
@@ -137,6 +138,25 @@ class TicketServiceImplTest {
         // ASSERT
         assertThat(result).isNotNull();
         verify(ticketRepository).save(any(Ticket.class));
+    }
+
+    @Test
+    @DisplayName("TEST-TICKET-008 / BR-TICKET-008: last available ticket is saved and event becomes SOLD_OUT")
+    void purchase_lastAvailableTicket_marksEventSoldOut() {
+        // ARRANGE
+        Event event = publishedEvent(18);
+        User user = user(true, birthDateForAge(event, 30));
+        givenPurchaseScenario(user, event, CAPACITY - 1L, ticketResponse(TicketStatus.PAID));
+        when(eventRepository.save(any(Event.class))).thenAnswer(inv -> inv.getArgument(0));
+
+        // ACT
+        service.purchase(purchaseRequest(TicketType.GENERAL));
+
+        // ASSERT
+        assertThat(event.getStatus()).isEqualTo(EventStatus.SOLD_OUT);
+        InOrder inOrder = inOrder(ticketRepository, eventRepository);
+        inOrder.verify(ticketRepository).save(any(Ticket.class));
+        inOrder.verify(eventRepository).save(event);
     }
 
     // ------------------------------------------------------------------
