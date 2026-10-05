@@ -214,6 +214,24 @@ class TicketServiceImplTest {
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
+    @Test
+    @DisplayName("BR-TICKET-003: missing event throws ResourceNotFoundException")
+    void purchase_missingEvent_throwsResourceNotFound() {
+        // ARRANGE
+        User user = user(true, LocalDate.now().minusYears(30));
+        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(user));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.purchase(purchaseRequest(TicketType.GENERAL)));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(EVENT_CODE);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
