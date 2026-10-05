@@ -381,6 +381,29 @@ class TicketServiceImplTest {
     }
 
     // ------------------------------------------------------------------
+    // markAsUsed
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-TICKET-011: marking a PAID ticket as used moves it to USED")
+    void markAsUsed_paidTicket_becomesUsed() {
+        // ARRANGE
+        Ticket ticket = ticket(TicketStatus.PAID, publishedEvent(18));
+        TicketResponse expected = ticketResponse(TicketStatus.USED);
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+        when(mapper.toResponse(ticket)).thenReturn(expected);
+
+        // ACT
+        TicketResponse result = service.markAsUsed(TICKET_CODE);
+
+        // ASSERT
+        assertThat(ticket.getStatus()).isEqualTo(TicketStatus.USED);
+        assertThat(result).isEqualTo(expected);
+        verify(ticketRepository).save(ticket);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
