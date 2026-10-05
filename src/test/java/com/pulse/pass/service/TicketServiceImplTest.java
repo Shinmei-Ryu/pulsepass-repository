@@ -15,6 +15,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.junit.jupiter.params.ParameterizedTest;
 import org.junit.jupiter.params.provider.CsvSource;
+import org.junit.jupiter.params.provider.EnumSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InOrder;
 import org.mockito.InjectMocks;
@@ -230,6 +231,25 @@ class TicketServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(EVENT_CODE);
         verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
+    @ParameterizedTest
+    @EnumSource(value = EventStatus.class, names = {"DRAFT", "SOLD_OUT", "CANCELLED", "FINISHED"})
+    @DisplayName("TEST-TICKET-004 / TEST-TICKET-005 / BR-TICKET-004: non-PUBLISHED event throws BusinessRuleException")
+    void purchase_nonPublishedEvent_throwsBusinessRule(EventStatus status) {
+        // ARRANGE
+        Event event = event(status, futureDate(), 18);
+        User user = user(true, LocalDate.now().minusYears(30));
+        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(user));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.purchase(purchaseRequest(TicketType.GENERAL)));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+        verify(eventRepository, never()).save(any(Event.class));
     }
 
     // ------------------------------------------------------------------
