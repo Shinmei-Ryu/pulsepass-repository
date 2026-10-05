@@ -252,6 +252,23 @@ class TicketServiceImplTest {
         verify(eventRepository, never()).save(any(Event.class));
     }
 
+    @Test
+    @DisplayName("BR-TICKET-005: past event throws BusinessRuleException")
+    void purchase_pastEvent_throwsBusinessRule() {
+        // ARRANGE
+        Event event = event(EventStatus.PUBLISHED, LocalDateTime.now().minusDays(1), 18);
+        User user = user(true, LocalDate.now().minusYears(30));
+        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(user));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.purchase(purchaseRequest(TicketType.GENERAL)));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
