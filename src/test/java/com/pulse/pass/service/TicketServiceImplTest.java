@@ -331,6 +331,21 @@ class TicketServiceImplTest {
         verify(ticketRepository).save(ticket);
     }
 
+    @Test
+    void cancel_missingTicket_throwsResourceNotFound() {
+        // ARRANGE
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.cancel(TICKET_CODE));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(TICKET_CODE);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
