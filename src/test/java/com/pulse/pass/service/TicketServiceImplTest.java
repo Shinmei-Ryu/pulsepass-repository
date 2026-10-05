@@ -309,6 +309,29 @@ class TicketServiceImplTest {
     }
 
     // ------------------------------------------------------------------
+    // cancel
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-TICKET-009: cancelling a PAID ticket moves it to CANCELLED")
+    void cancel_paidTicket_becomesCancelled() {
+        // ARRANGE
+        Ticket ticket = ticket(TicketStatus.PAID, publishedEvent(18));
+        TicketResponse expected = ticketResponse(TicketStatus.CANCELLED);
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.of(ticket));
+        when(ticketRepository.save(ticket)).thenReturn(ticket);
+        when(mapper.toResponse(ticket)).thenReturn(expected);
+
+        // ACT
+        TicketResponse result = service.cancel(TICKET_CODE);
+
+        // ASSERT
+        assertThat(ticket.getStatus()).isEqualTo(TicketStatus.CANCELLED);
+        assertThat(result).isEqualTo(expected);
+        verify(ticketRepository).save(ticket);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
