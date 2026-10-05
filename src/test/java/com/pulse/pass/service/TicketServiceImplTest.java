@@ -502,6 +502,20 @@ class TicketServiceImplTest {
         verify(ticketRepository).findByEvent_EventCodeAndStatus(eq(EVENT_CODE), eq(TicketStatus.PAID));
     }
 
+    @Test
+    void findPaidTicketsByEvent_noTickets_returnsEmptyList() {
+        // ARRANGE
+        when(ticketRepository.findByEvent_EventCodeAndStatus(EVENT_CODE, TicketStatus.PAID))
+                .thenReturn(List.of());
+
+        // ACT
+        List<TicketResponse> result = service.findPaidTicketsByEvent(EVENT_CODE);
+
+        // ASSERT
+        assertThat(result).isEmpty();
+        verify(mapper, never()).toResponse(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
