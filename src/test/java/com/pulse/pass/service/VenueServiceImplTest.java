@@ -97,6 +97,19 @@ class VenueServiceImplTest {
         verify(repository).findByActiveTrueOrderByNameAsc();
     }
 
+    @Test
+    void findActiveVenues_noVenues_returnsEmptyList() {
+        // ARRANGE
+        when(repository.findByActiveTrueOrderByNameAsc()).thenReturn(List.of());
+
+        // ACT
+        List<VenueResponse> result = service.findActiveVenues();
+
+        // ASSERT
+        assertThat(result).isEmpty();
+        verify(mapper, never()).toResponse(any(Venue.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
