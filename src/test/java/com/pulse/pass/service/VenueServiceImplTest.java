@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -70,6 +71,30 @@ class VenueServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(VENUE_CODE);
         verify(mapper, never()).toResponse(any(Venue.class));
+    }
+
+    // ------------------------------------------------------------------
+    // findActiveVenues
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("BR-VENUE-002: findActiveVenues returns mapped active venues")
+    void findActiveVenues_returnsMappedActiveVenues() {
+        // ARRANGE
+        Venue marina = venue("VEN-SMR-01", "Marina Convention Center", true);
+        Venue plaza = venue("VEN-BOG-01", "Plaza Mayor", true);
+        VenueResponse marinaResponse = venueResponse("VEN-SMR-01", "Marina Convention Center", true);
+        VenueResponse plazaResponse = venueResponse("VEN-BOG-01", "Plaza Mayor", true);
+        when(repository.findByActiveTrueOrderByNameAsc()).thenReturn(List.of(marina, plaza));
+        when(mapper.toResponse(marina)).thenReturn(marinaResponse);
+        when(mapper.toResponse(plaza)).thenReturn(plazaResponse);
+
+        // ACT
+        List<VenueResponse> result = service.findActiveVenues();
+
+        // ASSERT
+        assertThat(result).containsExactly(marinaResponse, plazaResponse);
+        verify(repository).findByActiveTrueOrderByNameAsc();
     }
 
     // ------------------------------------------------------------------
