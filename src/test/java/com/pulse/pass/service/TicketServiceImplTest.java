@@ -11,6 +11,8 @@ import com.pulse.pass.service.impl.TicketServiceImpl;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.junit.jupiter.params.ParameterizedTest;
+import org.junit.jupiter.params.provider.CsvSource;
 import org.mockito.ArgumentCaptor;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
@@ -78,6 +80,31 @@ class TicketServiceImplTest {
 
         assertThat(event.getStatus()).isEqualTo(EventStatus.PUBLISHED);
         verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    @ParameterizedTest
+    @CsvSource({
+            "GENERAL,120000",
+            "STUDENT,60000",
+            "VIP,240000",
+            "BACKSTAGE,360000"
+    })
+    @DisplayName("BR-TICKET-009: price strategy per ticket type is never negative")
+    void purchase_priceStrategy_matchesTicketType(TicketType type, String expectedPrice) {
+        // ARRANGE
+        Event event = publishedEvent(18);
+        User user = user(true, birthDateForAge(event, 25));
+        givenPurchaseScenario(user, event, 0L, ticketResponse(TicketStatus.PAID));
+
+        // ACT
+        service.purchase(purchaseRequest(type));
+
+        // ASSERT
+        ArgumentCaptor<Ticket> captor = ArgumentCaptor.forClass(Ticket.class);
+        verify(ticketRepository).save(captor.capture());
+        assertThat(captor.getValue().getPrice())
+                .isEqualByComparingTo(new BigDecimal(expectedPrice))
+                .isGreaterThanOrEqualTo(BigDecimal.ZERO);
     }
 
     // ------------------------------------------------------------------
