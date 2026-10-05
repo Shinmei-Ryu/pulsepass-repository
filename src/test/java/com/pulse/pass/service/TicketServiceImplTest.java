@@ -107,6 +107,22 @@ class TicketServiceImplTest {
                 .isGreaterThanOrEqualTo(BigDecimal.ZERO);
     }
 
+    @Test
+    @DisplayName("BR-TICKET-006: user turning exactly the minimum age on event date can buy")
+    void purchase_userExactlyMinimumAgeAtEventDate_canBuy() {
+        // ARRANGE
+        Event event = publishedEvent(18);
+        User user = user(true, birthDateForAge(event, 18));
+        givenPurchaseScenario(user, event, 0L, ticketResponse(TicketStatus.PAID));
+
+        // ACT
+        TicketResponse result = service.purchase(purchaseRequest(TicketType.GENERAL));
+
+        // ASSERT
+        assertThat(result).isNotNull();
+        verify(ticketRepository).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
