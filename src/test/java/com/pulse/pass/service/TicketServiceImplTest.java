@@ -485,6 +485,23 @@ class TicketServiceImplTest {
         verify(ticketRepository).findByUserEmailIgnoreCaseOrderByPurchaseDateDesc(USER_EMAIL);
     }
 
+    @Test
+    void findPaidTicketsByEvent_filtersByPaidStatus() {
+        // ARRANGE
+        Ticket ticket = ticket(TicketStatus.PAID, publishedEvent(18));
+        TicketResponse expected = ticketResponse(TicketStatus.PAID);
+        when(ticketRepository.findByEvent_EventCodeAndStatus(EVENT_CODE, TicketStatus.PAID))
+                .thenReturn(List.of(ticket));
+        when(mapper.toResponse(ticket)).thenReturn(expected);
+
+        // ACT
+        List<TicketResponse> result = service.findPaidTicketsByEvent(EVENT_CODE);
+
+        // ASSERT
+        assertThat(result).containsExactly(expected);
+        verify(ticketRepository).findByEvent_EventCodeAndStatus(eq(EVENT_CODE), eq(TicketStatus.PAID));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
