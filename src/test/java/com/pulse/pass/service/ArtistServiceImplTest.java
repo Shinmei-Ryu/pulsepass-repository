@@ -136,6 +136,19 @@ class ArtistServiceImplTest {
         verify(repository).findByActiveTrueOrderByStageNameAsc();
     }
 
+    @Test
+    void findActiveArtists_noArtists_returnsEmptyList() {
+        // ARRANGE
+        when(repository.findByActiveTrueOrderByStageNameAsc()).thenReturn(List.of());
+
+        // ACT
+        List<ArtistResponse> result = service.findActiveArtists();
+
+        // ASSERT
+        assertThat(result).isEmpty();
+        verify(mapper, never()).toResponse(any(Artist.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
