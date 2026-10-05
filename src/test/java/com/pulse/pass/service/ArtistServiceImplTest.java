@@ -95,6 +95,22 @@ class ArtistServiceImplTest {
         verify(mapper).toResponse(artist);
     }
 
+    @Test
+    @DisplayName("BR-ARTIST-001: missing artist by stage name throws ResourceNotFoundException")
+    void findByStageName_missingArtist_throwsResourceNotFound() {
+        // ARRANGE
+        when(repository.findByStageNameIgnoreCase(STAGE_NAME)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.findByStageName(STAGE_NAME));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(STAGE_NAME);
+        verify(mapper, never()).toResponse(any(Artist.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
