@@ -123,6 +123,22 @@ class TicketServiceImplTest {
         verify(ticketRepository).save(any(Ticket.class));
     }
 
+    @Test
+    @DisplayName("BR-TICKET-006: minimumAge 0 skips the age validation")
+    void purchase_eventWithoutAgeRestriction_skipsAgeCheck() {
+        // ARRANGE
+        Event event = publishedEvent(0);
+        User userWithoutProfile = new User("andrea", USER_EMAIL, true);
+        givenPurchaseScenario(userWithoutProfile, event, 0L, ticketResponse(TicketStatus.PAID));
+
+        // ACT
+        TicketResponse result = service.purchase(purchaseRequest(TicketType.GENERAL));
+
+        // ASSERT
+        assertThat(result).isNotNull();
+        verify(ticketRepository).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
