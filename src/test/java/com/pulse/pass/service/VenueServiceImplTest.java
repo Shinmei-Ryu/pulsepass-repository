@@ -2,6 +2,7 @@ package com.pulse.pass.service;
 
 import com.pulse.pass.domain.Venue;
 import com.pulse.pass.dto.response.VenueResponse;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.mapper.VenueMapper;
 import com.pulse.pass.repository.VenueRepository;
 import com.pulse.pass.service.impl.VenueServiceImpl;
@@ -15,9 +16,9 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.ThrowableAssert.catchThrowable;
 import static org.mockito.ArgumentMatchers.eq;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class VenueServiceImplTest {
@@ -53,6 +54,22 @@ class VenueServiceImplTest {
         assertThat(result).isEqualTo(expected);
         verify(repository).findByCode(VENUE_CODE);
         verify(mapper).toResponse(venue);
+    }
+
+    @Test
+    @DisplayName("BR-VENUE-001: missing venue throws ResourceNotFoundException")
+    void findByCode_missingVenue_throwsResourceNotFound() {
+        // ARRANGE
+        when(repository.findByCode(VENUE_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.findByCode(VENUE_CODE));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(VENUE_CODE);
+        verify(mapper, never()).toResponse(any(Venue.class));
     }
 
     // ------------------------------------------------------------------
