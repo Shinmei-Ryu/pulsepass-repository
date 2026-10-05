@@ -74,6 +74,28 @@ class ArtistServiceImplTest {
     }
 
     // ------------------------------------------------------------------
+    // findByStageName
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("FR-SVC-009: existing artist by stage name returns DTO")
+    void findByStageName_existingArtist_returnsDto() {
+        // ARRANGE
+        Artist artist = artist(STAGE_NAME, true);
+        ArtistResponse expected = artistResponse(STAGE_NAME, true);
+        when(repository.findByStageNameIgnoreCase(eq(STAGE_NAME))).thenReturn(Optional.of(artist));
+        when(mapper.toResponse(artist)).thenReturn(expected);
+
+        // ACT
+        ArtistResponse result = service.findByStageName(STAGE_NAME);
+
+        // ASSERT
+        assertThat(result).isEqualTo(expected);
+        verify(repository).findByStageNameIgnoreCase(STAGE_NAME);
+        verify(mapper).toResponse(artist);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
