@@ -25,6 +25,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -465,6 +466,23 @@ class TicketServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(TICKET_CODE);
         verify(mapper, never()).toResponse(any(Ticket.class));
+    }
+
+    @Test
+    void findByUserEmail_returnsMappedTickets() {
+        // ARRANGE
+        Ticket ticket = ticket(TicketStatus.PAID, publishedEvent(18));
+        TicketResponse expected = ticketResponse(TicketStatus.PAID);
+        when(ticketRepository.findByUserEmailIgnoreCaseOrderByPurchaseDateDesc(USER_EMAIL))
+                .thenReturn(List.of(ticket));
+        when(mapper.toResponse(ticket)).thenReturn(expected);
+
+        // ACT
+        List<TicketResponse> result = service.findByUserEmail(USER_EMAIL);
+
+        // ASSERT
+        assertThat(result).containsExactly(expected);
+        verify(ticketRepository).findByUserEmailIgnoreCaseOrderByPurchaseDateDesc(USER_EMAIL);
     }
 
     // ------------------------------------------------------------------
