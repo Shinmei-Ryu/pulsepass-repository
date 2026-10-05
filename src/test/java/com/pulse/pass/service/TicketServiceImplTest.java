@@ -269,6 +269,24 @@ class TicketServiceImplTest {
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
+    @Test
+    @DisplayName("TEST-TICKET-006 / BR-TICKET-006: underage user throws BusinessRuleException")
+    void purchase_underageUser_throwsBusinessRule() {
+        // ARRANGE
+        Event event = publishedEvent(18);
+        User underageUser = user(true, birthDateForAge(event, 17));
+        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(underageUser));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.purchase(purchaseRequest(TicketType.GENERAL)));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        verify(ticketRepository, never()).countByEventEventCodeAndStatus(anyString(), any(TicketStatus.class));
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
