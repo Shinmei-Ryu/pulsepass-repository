@@ -416,6 +416,23 @@ class TicketServiceImplTest {
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
+    @ParameterizedTest
+    @EnumSource(value = TicketStatus.class, names = {"CANCELLED", "USED"})
+    @DisplayName("TEST-TICKET-012 / BR-TICKET-013 / BR-TICKET-014: CANCELLED or USED ticket cannot be used")
+    void markAsUsed_cancelledOrUsedTicket_throwsBusinessRule(TicketStatus status) {
+        // ARRANGE
+        Ticket ticket = ticket(status, publishedEvent(18));
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.of(ticket));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.markAsUsed(TICKET_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(ticket.getStatus()).isEqualTo(status);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
