@@ -452,6 +452,21 @@ class TicketServiceImplTest {
         assertThat(result).isEqualTo(expected);
     }
 
+    @Test
+    void findByCode_missingTicket_throwsResourceNotFound() {
+        // ARRANGE
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.findByCode(TICKET_CODE));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(TICKET_CODE);
+        verify(mapper, never()).toResponse(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
