@@ -3,6 +3,7 @@ package com.pulse.pass.service;
 import com.pulse.pass.domain.*;
 import com.pulse.pass.dto.request.PurchaseTicketRequest;
 import com.pulse.pass.dto.response.TicketResponse;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.mapper.TicketMapper;
 import com.pulse.pass.repository.EventRepository;
 import com.pulse.pass.repository.TicketRepository;
@@ -25,6 +26,7 @@ import java.time.LocalDateTime;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
+import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
 
@@ -173,6 +175,26 @@ class TicketServiceImplTest {
         // ASSERT
         assertThat(event.getStatus()).isEqualTo(EventStatus.PUBLISHED);
         verify(eventRepository, never()).save(any(Event.class));
+    }
+
+    // ------------------------------------------------------------------
+    // purchase - invalid paths
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-TICKET-002 / BR-TICKET-001: missing user throws ResourceNotFoundException")
+    void purchase_missingUser_throwsResourceNotFound() {
+        // ARRANGE
+        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.purchase(purchaseRequest(TicketType.GENERAL)));
+
+        // ASSERT
+        assertThat(thrown)
+                .isInstanceOf(ResourceNotFoundException.class)
+                .hasMessageContaining(USER_EMAIL);
+        verifyNoInteractions(eventRepository, ticketRepository);
     }
 
     // ------------------------------------------------------------------
