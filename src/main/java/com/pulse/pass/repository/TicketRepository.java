@@ -22,6 +22,11 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     // FR-TKT-006: tickets de un usuario por email (Ticket -> User -> email)
     List<Ticket> findByUser_Email(String email);
 
+    List<Ticket>
+    findByUserEmailIgnoreCaseOrderByPurchaseDateDesc(
+                    String email
+    );
+
     // FR-TKT-006: tickets de un usuario por email y estado
     List<Ticket> findByUser_EmailAndStatus(String email, TicketStatus status);
 
@@ -31,6 +36,11 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
 
     // FR-SRC-004: tickets de eventos posteriores a una fecha, ordenados cronológicamente
     List<Ticket> findByEvent_EventDateAfterOrderByEvent_EventDateAsc(LocalDateTime date);
+
+    long countByEventEventCodeAndStatus(
+            String eventCode,
+            TicketStatus status
+    );
 
     // ---------- JPQL ----------
 
@@ -43,4 +53,6 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
               AND t.status = com.pulse.pass.domain.TicketStatus.PAID
             """)
     long countPaidByEventCode(@Param("eventCode") String eventCode);
+
+
 }
