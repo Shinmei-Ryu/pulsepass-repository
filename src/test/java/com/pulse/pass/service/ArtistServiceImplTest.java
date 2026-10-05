@@ -13,6 +13,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 
+import java.util.List;
 import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
@@ -109,6 +110,30 @@ class ArtistServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(STAGE_NAME);
         verify(mapper, never()).toResponse(any(Artist.class));
+    }
+
+    // ------------------------------------------------------------------
+    // findActiveArtists
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("BR-ARTIST-002: findActiveArtists returns mapped active artists")
+    void findActiveArtists_returnsMappedActiveArtists() {
+        // ARRANGE
+        Artist solarBeat = artist("Solar Beat", true);
+        Artist neonWaves = artist("Neon Waves", true);
+        ArtistResponse solarBeatResponse = artistResponse("Solar Beat", true);
+        ArtistResponse neonWavesResponse = artistResponse("Neon Waves", true);
+        when(repository.findByActiveTrueOrderByStageNameAsc()).thenReturn(List.of(neonWaves, solarBeat));
+        when(mapper.toResponse(solarBeat)).thenReturn(solarBeatResponse);
+        when(mapper.toResponse(neonWaves)).thenReturn(neonWavesResponse);
+
+        // ACT
+        List<ArtistResponse> result = service.findActiveArtists();
+
+        // ASSERT
+        assertThat(result).containsExactly(neonWavesResponse, solarBeatResponse);
+        verify(repository).findByActiveTrueOrderByStageNameAsc();
     }
 
     // ------------------------------------------------------------------
