@@ -403,6 +403,19 @@ class TicketServiceImplTest {
         verify(ticketRepository).save(ticket);
     }
 
+    @Test
+    void markAsUsed_missingTicket_throwsResourceNotFound() {
+        // ARRANGE
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.markAsUsed(TICKET_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(ResourceNotFoundException.class);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
