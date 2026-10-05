@@ -346,6 +346,23 @@ class TicketServiceImplTest {
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
+    @ParameterizedTest
+    @EnumSource(value = TicketStatus.class, names = {"USED", "CANCELLED"})
+    @DisplayName("TEST-TICKET-010 / BR-TICKET-011: USED or CANCELLED ticket cannot be cancelled")
+    void cancel_usedOrCancelledTicket_throwsBusinessRule(TicketStatus status) {
+        // ARRANGE
+        Ticket ticket = ticket(status, publishedEvent(18));
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.of(ticket));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.cancel(TICKET_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(ticket.getStatus()).isEqualTo(status);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
@@ -391,6 +408,11 @@ class TicketServiceImplTest {
 
     private LocalDate birthDateForAge(Event event, int years) {
         return event.getEventDate().toLocalDate().minusYears(years);
+    }
+
+    private Ticket ticket(TicketStatus status, Event event) {
+        return new Ticket(user(true, LocalDate.now().minusYears(30)), event, TICKET_CODE,
+                TicketType.VIP, new BigDecimal("240000.00"), status, LocalDateTime.now().minusDays(1));
     }
 
     private TicketResponse ticketResponse(TicketStatus status) {
