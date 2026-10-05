@@ -287,6 +287,27 @@ class TicketServiceImplTest {
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
+    @Test
+    @DisplayName("TEST-TICKET-007 / BR-TICKET-007 / AC-009: event without capacity throws BusinessRuleException")
+    void purchase_eventWithoutCapacity_throwsBusinessRule() {
+        // ARRANGE
+        Event event = publishedEvent(18);
+        User user = user(true, birthDateForAge(event, 25));
+        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(user));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+        when(ticketRepository.countByEventEventCodeAndStatus(eq(EVENT_CODE), eq(TicketStatus.PAID)))
+                .thenReturn((long) CAPACITY);
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.purchase(purchaseRequest(TicketType.GENERAL)));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(event.getStatus()).isEqualTo(EventStatus.PUBLISHED);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+        verify(eventRepository, never()).save(any(Event.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
