@@ -363,6 +363,23 @@ class TicketServiceImplTest {
         verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
+    @Test
+    @DisplayName("BR-TICKET-012: PAID ticket cannot be cancelled after the event date")
+    void cancel_afterEventDate_throwsBusinessRule() {
+        // ARRANGE
+        Event pastEvent = event(EventStatus.PUBLISHED, LocalDateTime.now().minusDays(1), 18);
+        Ticket ticket = ticket(TicketStatus.PAID, pastEvent);
+        when(ticketRepository.findByTicketCode(TICKET_CODE)).thenReturn(Optional.of(ticket));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.cancel(TICKET_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        assertThat(ticket.getStatus()).isEqualTo(TicketStatus.PAID);
+        verify(ticketRepository, never()).save(any(Ticket.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
