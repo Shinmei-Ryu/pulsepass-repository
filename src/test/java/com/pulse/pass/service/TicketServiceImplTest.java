@@ -3,6 +3,7 @@ package com.pulse.pass.service;
 import com.pulse.pass.domain.*;
 import com.pulse.pass.dto.request.PurchaseTicketRequest;
 import com.pulse.pass.dto.response.TicketResponse;
+import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.mapper.TicketMapper;
 import com.pulse.pass.repository.EventRepository;
@@ -195,6 +196,22 @@ class TicketServiceImplTest {
                 .isInstanceOf(ResourceNotFoundException.class)
                 .hasMessageContaining(USER_EMAIL);
         verifyNoInteractions(eventRepository, ticketRepository);
+    }
+
+    @Test
+    @DisplayName("TEST-TICKET-003 / BR-TICKET-002: inactive user throws BusinessRuleException")
+    void purchase_inactiveUser_throwsBusinessRule() {
+        // ARRANGE
+        User inactiveUser = user(false, LocalDate.now().minusYears(30));
+        when(userRepository.findByEmailIgnoreCase(USER_EMAIL)).thenReturn(Optional.of(inactiveUser));
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.purchase(purchaseRequest(TicketType.GENERAL)));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        verifyNoInteractions(eventRepository);
+        verify(ticketRepository, never()).save(any(Ticket.class));
     }
 
     // ------------------------------------------------------------------
