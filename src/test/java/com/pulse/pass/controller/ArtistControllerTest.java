@@ -108,6 +108,22 @@ class ArtistControllerTest {
         verify(service, never()).findById(anyLong());
     }
 
+    @Test
+    void shouldReturn404WhenStageNameDoesNotExist() throws Exception {
+        // ARRANGE
+        when(service.findByStageName("Nobody"))
+                .thenThrow(new ResourceNotFoundException("Artist not found: Nobody"));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/artists/by-stage-name").param("stageName", "Nobody"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Artist not found: Nobody"));
+
+        verify(service).findByStageName("Nobody");
+    }
+
 
     // ------------------------------------------------------------------
     // Helpers
