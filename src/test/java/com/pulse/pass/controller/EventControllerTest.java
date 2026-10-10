@@ -308,6 +308,22 @@ class EventControllerTest {
         verify(service).addArtist(EVENT_CODE, 1L);
     }
 
+    @Test
+    @DisplayName("BR-EVENT-010: artist already associated returns 409")
+    void shouldReturn409WhenArtistIsAlreadyAssociated() throws Exception {
+        // ARRANGE
+        when(service.addArtist(EVENT_CODE, 1L))
+                .thenThrow(new BusinessRuleException("Artist already associated with event: CMF-2026"));
+
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/events/{eventCode}/artists/{artistId}", EVENT_CODE, 1L))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message").value("Artist already associated with event: CMF-2026"));
+
+        verify(service).addArtist(EVENT_CODE, 1L);
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
