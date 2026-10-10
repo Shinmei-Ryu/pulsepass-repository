@@ -87,6 +87,27 @@ class ArtistControllerTest {
         verify(service, never()).findById(anyLong());
     }
 
+    // ------------------------------------------------------------------
+    // GET /api/artists/by-stage-name?stageName=...
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-ART-003: find by stage name returns 200")
+    void shouldReturnArtistByStageName() throws Exception {
+        // ARRANGE
+        when(service.findByStageName("Solar Beat")).thenReturn(artist(1L, "Solar Beat"));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/artists/by-stage-name").param("stageName", "Solar Beat"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.id").value(1))
+                .andExpect(jsonPath("$.stageName").value("Solar Beat"));
+
+        verify(service).findByStageName("Solar Beat");
+        verify(service, never()).findById(anyLong());
+    }
+
 
     // ------------------------------------------------------------------
     // Helpers
