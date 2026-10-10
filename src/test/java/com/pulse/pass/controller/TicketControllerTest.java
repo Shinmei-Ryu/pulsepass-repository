@@ -294,6 +294,26 @@ class TicketControllerTest {
         verify(service).cancel(TICKET_CODE);
     }
 
+    // ------------------------------------------------------------------
+    // PATCH /api/tickets/{ticketCode}/use
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-TKT-010: valid use returns 200")
+    void shouldMarkTicketAsUsed() throws Exception {
+        // ARRANGE
+        when(service.markAsUsed(TICKET_CODE)).thenReturn(ticket(TicketStatus.USED));
+
+        // ACT + ASSERT
+        mockMvc.perform(patch("/api/tickets/{ticketCode}/use", TICKET_CODE))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.ticketCode").value("TCK-CMF-2026-1"))
+                .andExpect(jsonPath("$.status").value("USED"));
+
+        verify(service).markAsUsed(TICKET_CODE);
+    }
+
 
     // ------------------------------------------------------------------
     // Helpers
