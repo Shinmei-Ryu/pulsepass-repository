@@ -24,6 +24,7 @@ import java.time.LocalDateTime;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -166,6 +167,28 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$.details").isMap());
 
         verify(service).purchase(any(PurchaseTicketRequest.class));
+    }
+
+    // ------------------------------------------------------------------
+    // GET /api/tickets/{ticketCode}
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-TKT-005: find ticket by code returns 200")
+    void shouldReturnTicketByCode() throws Exception {
+        // ARRANGE
+        when(service.findByCode(TICKET_CODE)).thenReturn(ticket(TicketStatus.PAID));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/tickets/{ticketCode}", TICKET_CODE))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.ticketCode").value("TCK-CMF-2026-1"))
+                .andExpect(jsonPath("$.status").value("PAID"))
+                .andExpect(jsonPath("$.userEmail").value("andrea@email.com"))
+                .andExpect(jsonPath("$.eventCode").value("CMF-2026"));
+
+        verify(service).findByCode(TICKET_CODE);
     }
 
     // ------------------------------------------------------------------
