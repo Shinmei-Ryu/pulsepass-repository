@@ -22,8 +22,7 @@ import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -90,7 +89,37 @@ class EventControllerTest {
         assertThat(sent.venueCode()).isEqualTo("VEN-SMR-01");
     }
 
+    @Test
+    @DisplayName("TEST-CTRL-EVT-002: invalid request returns 400 with details and never calls Service")
+    void shouldReturn400WhenCreateRequestIsInvalid() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "eventCode": "",
+                                  "name": "",
+                                  "category": null,
+                                  "eventDate": null,
+                                  "minimumAge": -1,
+                                  "venueCode": ""
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.details.eventCode").value("Event code is required"))
+                .andExpect(jsonPath("$.details.name").value("Event name is required"))
+                .andExpect(jsonPath("$.details.category").value("Category is required"))
+                .andExpect(jsonPath("$.details.eventDate").value("Event date is required"))
+                .andExpect(jsonPath("$.details.minimumAge").value("Minimum age cannot be negative"))
+                .andExpect(jsonPath("$.details.venueCode").value("Venue code is required"));
 
+        verify(service, never()).create(any(CreateEventRequest.class));
+    }
 
     // ------------------------------------------------------------------
     // Helpers
