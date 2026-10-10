@@ -288,6 +288,27 @@ class EventControllerTest {
     }
 
     // ------------------------------------------------------------------
+    // POST /api/events/{eventCode}/artists/{artistId}
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-EVT-008: add artist returns 200")
+    void shouldAddArtistToEvent() throws Exception {
+        // ARRANGE
+        when(service.addArtist(EVENT_CODE, 1L))
+                .thenReturn(eventResponse(EventStatus.DRAFT, List.of("Solar Beat")));
+
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/events/{eventCode}/artists/{artistId}", EVENT_CODE, 1L))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.eventCode").value("CMF-2026"))
+                .andExpect(jsonPath("$.artists[0]").value("Solar Beat"));
+
+        verify(service).addArtist(EVENT_CODE, 1L);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
