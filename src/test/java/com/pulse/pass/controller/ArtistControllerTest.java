@@ -2,6 +2,7 @@ package com.pulse.pass.controller;
 
 import com.pulse.pass.dto.response.ArtistResponse;
 import com.pulse.pass.exception.GlobalExceptionHandler;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.service.ArtistService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -45,6 +46,26 @@ class ArtistControllerTest {
                 .andExpect(jsonPath("$.active").value(true));
 
         verify(service).findById(1L);
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-ART-002: missing id returns 404 with ErrorResponse")
+    void shouldReturn404WhenArtistIdDoesNotExist() throws Exception {
+        // ARRANGE
+        when(service.findById(99L))
+                .thenThrow(new ResourceNotFoundException("Artist not found: 99"));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/artists/{id}", 99L))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Artist not found: 99"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).findById(99L);
     }
 
 
