@@ -21,8 +21,7 @@ import java.time.LocalDateTime;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -82,7 +81,31 @@ class TicketControllerTest {
         assertThat(sent.type()).isEqualTo(TicketType.VIP);
     }
 
+    @Test
+    @DisplayName("TEST-CTRL-TKT-002: invalid request returns 400 with details and never calls Service")
+    void shouldReturn400WhenPurchaseRequestIsInvalid() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/tickets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "userEmail": "not-an-email",
+                                  "eventCode": "",
+                                  "type": null
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.details.userEmail").value("User email must be a valid email address"))
+                .andExpect(jsonPath("$.details.eventCode").value("Event code is required"))
+                .andExpect(jsonPath("$.details.type").value("Ticket type is required"));
 
+        verify(service, never()).purchase(any(PurchaseTicketRequest.class));
+    }
 
 
     // ------------------------------------------------------------------
