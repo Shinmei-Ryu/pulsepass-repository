@@ -5,6 +5,7 @@ import com.pulse.pass.domain.EventStatus;
 import com.pulse.pass.dto.request.CreateEventRequest;
 import com.pulse.pass.dto.response.EventResponse;
 import com.pulse.pass.dto.response.EventSummaryResponse;
+import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.service.EventService;
 import org.junit.jupiter.api.DisplayName;
@@ -155,6 +156,27 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.details.body").exists());
 
         verify(service, never()).create(any(CreateEventRequest.class));
+    }
+
+    @Test
+    @DisplayName("BR-EVENT-001: duplicated event code returns 409")
+    void shouldReturn409WhenEventCodeAlreadyExists() throws Exception {
+        // ARRANGE
+        when(service.create(any(CreateEventRequest.class)))
+                .thenThrow(new DuplicateResourceException("Event code already exists: CMF-2026"));
+
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Event code already exists: CMF-2026"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).create(any(CreateEventRequest.class));
     }
 
     // ------------------------------------------------------------------
