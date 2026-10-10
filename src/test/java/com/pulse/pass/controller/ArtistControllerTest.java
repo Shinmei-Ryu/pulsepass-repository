@@ -138,6 +138,19 @@ class ArtistControllerTest {
         verify(service, never()).findByStageName(anyString());
     }
 
+    @Test
+    void shouldReturn500WhenUnexpectedErrorOccurs() throws Exception {
+        when(service.findById(1L)).thenThrow(new RuntimeException("internal failure details"));
+
+        mockMvc.perform(get("/api/artists/{id}", 1L))
+                .andExpect(status().isInternalServerError())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(500))
+                .andExpect(jsonPath("$.error").value("Internal Server Error"))
+                .andExpect(jsonPath("$.message").value("An unexpected error occurred"))
+                .andExpect(jsonPath("$.details").isMap());
+    }
+
     // ------------------------------------------------------------------
     // GET /api/artists/active
     // ------------------------------------------------------------------
