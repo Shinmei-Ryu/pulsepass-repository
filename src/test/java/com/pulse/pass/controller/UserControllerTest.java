@@ -20,9 +20,11 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.ArgumentMatchers.anyString;
 import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -184,6 +186,23 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Birth date cannot be in the future."));
 
         verify(service).register(any(RegisterUserRequest.class));
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-USR-004: find by email returns 200")
+    void shouldReturnUserByEmail() throws Exception {
+        // ARRANGE
+        when(service.findByEmail("andrea@email.com")).thenReturn(userResponse());
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/users/by-email").param("email", "andrea@email.com"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.email").value("andrea@email.com"))
+                .andExpect(jsonPath("$.username").value("andrea"));
+
+        verify(service).findByEmail("andrea@email.com");
+        verify(service, never()).findByUsername(anyString());
     }
 
     // ------------------------------------------------------------------
