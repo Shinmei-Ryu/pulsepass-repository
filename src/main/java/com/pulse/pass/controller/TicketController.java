@@ -53,4 +53,10 @@ public class TicketController {
     public ResponseEntity<TicketResponse> cancel(@PathVariable String ticketCode) {
         return ResponseEntity.ok(service.cancel(ticketCode));
     }
+
+    // FR-CTRL-TKT-006
+    @PatchMapping("/tickets/{ticketCode}/use")
+    public ResponseEntity<TicketResponse> markAsUsed(@PathVariable String ticketCode) {
+        return ResponseEntity.ok(service.markAsUsed(ticketCode));
+    }
 }
