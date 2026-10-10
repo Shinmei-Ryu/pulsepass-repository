@@ -2,6 +2,7 @@ package com.pulse.pass.controller;
 
 import com.pulse.pass.dto.response.VenueResponse;
 import com.pulse.pass.exception.GlobalExceptionHandler;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.service.VenueService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -50,6 +51,26 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$.active").value(true));
 
         verify(service).findByCode(VENUE_CODE);
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-VEN-002: missing venue returns 404 with ErrorResponse")
+    void shouldReturn404WhenVenueDoesNotExist() throws Exception {
+        // ARRANGE
+        when(service.findByCode("VEN-999"))
+                .thenThrow(new ResourceNotFoundException("Venue not found: VEN-999"));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/venues/{code}", "VEN-999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Venue not found: VEN-999"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).findByCode("VEN-999");
     }
 
     // ------------------------------------------------------------------
