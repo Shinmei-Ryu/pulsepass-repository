@@ -5,6 +5,7 @@ import com.pulse.pass.dto.response.UserResponse;
 import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -203,6 +204,24 @@ class UserControllerTest {
 
         verify(service).findByEmail("andrea@email.com");
         verify(service, never()).findByUsername(anyString());
+    }
+
+    @Test
+    void shouldReturn404WhenUserEmailDoesNotExist() throws Exception {
+        // ARRANGE
+        when(service.findByEmail("nobody@email.com"))
+                .thenThrow(new ResourceNotFoundException("User not found: nobody@email.com"));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/users/by-email").param("email", "nobody@email.com"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("User not found: nobody@email.com"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).findByEmail("nobody@email.com");
     }
 
     // ------------------------------------------------------------------
