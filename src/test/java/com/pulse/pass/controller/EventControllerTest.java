@@ -324,6 +324,19 @@ class EventControllerTest {
         verify(service).addArtist(EVENT_CODE, 1L);
     }
 
+    @Test
+    void shouldReturn400WhenArtistIdIsNotNumeric() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/events/{eventCode}/artists/{artistId}", EVENT_CODE, "abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Invalid request parameter"))
+                .andExpect(jsonPath("$.details.artistId").value("Invalid value: abc"));
+
+        verify(service, never()).addArtist(anyString(), anyLong());
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
