@@ -48,4 +48,12 @@ public class EventController {
     public ResponseEntity<EventResponse> publish(@PathVariable String eventCode) {
         return ResponseEntity.ok(service.publish(eventCode));
     }
+
+    // FR-CTRL-EVT-005
+    @PostMapping("/{eventCode}/artists/{artistId}")
+    public ResponseEntity<EventResponse> addArtist(
+            @PathVariable String eventCode,
+            @PathVariable Long artistId) {
+        return ResponseEntity.ok(service.addArtist(eventCode, artistId));
+    }
 }
