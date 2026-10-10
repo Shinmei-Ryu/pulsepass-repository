@@ -5,6 +5,8 @@ import com.pulse.pass.service.ArtistService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/artists")
 public class ArtistController {
@@ -25,5 +27,11 @@ public class ArtistController {
     @GetMapping("/by-stage-name")
     public ResponseEntity<ArtistResponse> findByStageName(@RequestParam String stageName) {
         return ResponseEntity.ok(service.findByStageName(stageName));
+    }
+
+    // FR-CTRL-ART-003
+    @GetMapping("/active")
+    public ResponseEntity<List<ArtistResponse>> findActiveArtists() {
+        return ResponseEntity.ok(service.findActiveArtists());
     }
 }
