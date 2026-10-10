@@ -191,6 +191,22 @@ class TicketControllerTest {
         verify(service).findByCode(TICKET_CODE);
     }
 
+    @Test
+    void shouldReturn404WhenTicketDoesNotExist() throws Exception {
+        // ARRANGE
+        when(service.findByCode("TCK-999"))
+                .thenThrow(new ResourceNotFoundException("Ticket not found: TCK-999"));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/tickets/{ticketCode}", "TCK-999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.message").value("Ticket not found: TCK-999"));
+
+        verify(service).findByCode("TCK-999");
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
