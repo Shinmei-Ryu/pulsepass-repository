@@ -6,10 +6,7 @@ import com.pulse.pass.service.TicketService;
 import jakarta.validation.Valid;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api")
@@ -29,5 +26,11 @@ public class TicketController {
         return ResponseEntity
                 .status(HttpStatus.CREATED)
                 .body(response);
+    }
+
+    // FR-CTRL-TKT-002
+    @GetMapping("/tickets/{ticketCode}")
+    public ResponseEntity<TicketResponse> findByCode(@PathVariable String ticketCode) {
+        return ResponseEntity.ok(service.findByCode(ticketCode));
     }
 }
