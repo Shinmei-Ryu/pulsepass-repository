@@ -149,6 +149,24 @@ class UserControllerTest {
         verify(service).register(any(RegisterUserRequest.class));
     }
 
+    @Test
+    @DisplayName("AC-CTRL-008 / BR-USER-002: duplicated email returns 409")
+    void shouldReturn409WhenEmailAlreadyExists() throws Exception {
+        // ARRANGE
+        when(service.register(any(RegisterUserRequest.class)))
+                .thenThrow(new DuplicateResourceException("Email already exists: andrea@email.com"));
+
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message").value("Email already exists: andrea@email.com"));
+
+        verify(service).register(any(RegisterUserRequest.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
