@@ -20,6 +20,7 @@ import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
+import java.util.List;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
@@ -205,6 +206,32 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$.message").value("Ticket not found: TCK-999"));
 
         verify(service).findByCode("TCK-999");
+    }
+
+    // ------------------------------------------------------------------
+    // GET /api/tickets/by-user?email=...
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-TKT-006: tickets by user returns 200 and a list")
+    void shouldReturnTicketsByUser() throws Exception {
+        // ARRANGE
+        when(service.findByUserEmail(USER_EMAIL)).thenReturn(List.of(
+                ticket(TicketStatus.PAID),
+                ticket(TicketStatus.USED)));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/tickets/by-user").param("email", USER_EMAIL))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].userEmail").value("andrea@email.com"))
+                .andExpect(jsonPath("$[0].status").value("PAID"))
+                .andExpect(jsonPath("$[1].status").value("USED"));
+
+        verify(service).findByUserEmail(USER_EMAIL);
+        // "by-user" must not be captured as {ticketCode}
+        verify(service, never()).findByCode(anyString());
     }
 
     // ------------------------------------------------------------------
