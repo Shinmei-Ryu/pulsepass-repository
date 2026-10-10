@@ -121,6 +121,27 @@ class EventControllerTest {
         verify(service, never()).create(any(CreateEventRequest.class));
     }
 
+    @Test
+    void shouldReturn400WhenMinimumAgeIsMissing() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "eventCode": "CMF-2026",
+                                  "name": "Caribbean Music Fest 2026",
+                                  "category": "MUSIC",
+                                  "eventDate": "2026-12-01T20:00:00",
+                                  "venueCode": "VEN-SMR-01"
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.details.minimumAge").value("Minimum age is required"));
+
+        verify(service, never()).create(any(CreateEventRequest.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
