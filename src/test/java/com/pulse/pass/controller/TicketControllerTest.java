@@ -25,8 +25,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -253,6 +252,26 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$[0].status").value("PAID"));
 
         verify(service).findPaidTicketsByEvent(EVENT_CODE);
+    }
+
+    // ------------------------------------------------------------------
+    // PATCH /api/tickets/{ticketCode}/cancel
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-TKT-008: valid cancel returns 200")
+    void shouldCancelTicket() throws Exception {
+        // ARRANGE
+        when(service.cancel(TICKET_CODE)).thenReturn(ticket(TicketStatus.CANCELLED));
+
+        // ACT + ASSERT
+        mockMvc.perform(patch("/api/tickets/{ticketCode}/cancel", TICKET_CODE))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.ticketCode").value("TCK-CMF-2026-1"))
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+
+        verify(service).cancel(TICKET_CODE);
     }
 
     // ------------------------------------------------------------------
