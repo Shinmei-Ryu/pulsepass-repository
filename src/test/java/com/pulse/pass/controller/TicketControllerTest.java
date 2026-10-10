@@ -107,6 +107,20 @@ class TicketControllerTest {
         verify(service, never()).purchase(any(PurchaseTicketRequest.class));
     }
 
+    @Test
+    void shouldReturn400WhenTicketTypeEnumValueIsInvalid() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/tickets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY.replace("VIP", "FLYING")))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Malformed or invalid JSON request"))
+                .andExpect(jsonPath("$.details.body").exists());
+
+        verify(service, never()).purchase(any(PurchaseTicketRequest.class));
+    }
 
     // ------------------------------------------------------------------
     // Helpers
