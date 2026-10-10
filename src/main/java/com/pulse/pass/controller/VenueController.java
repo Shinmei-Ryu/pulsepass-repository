@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api/venues")
 public class VenueController {
@@ -22,5 +24,11 @@ public class VenueController {
     @GetMapping("/{code}")
     public ResponseEntity<VenueResponse> findByCode(@PathVariable String code) {
         return ResponseEntity.ok(service.findByCode(code));
+    }
+
+    // FR-CTRL-VEN-002
+    @GetMapping("/active")
+    public ResponseEntity<List<VenueResponse>> findActiveVenues() {
+        return ResponseEntity.ok(service.findActiveVenues());
     }
 }
