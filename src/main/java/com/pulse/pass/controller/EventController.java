@@ -42,4 +42,10 @@ public class EventController {
     public ResponseEntity<List<EventSummaryResponse>> findPublishedEvents() {
         return ResponseEntity.ok(service.findPublishedEvents());
     }
+
+    // FR-CTRL-EVT-004
+    @PatchMapping("/{eventCode}/publish")
+    public ResponseEntity<EventResponse> publish(@PathVariable String eventCode) {
+        return ResponseEntity.ok(service.publish(eventCode));
+    }
 }
