@@ -7,6 +7,7 @@ import com.pulse.pass.dto.response.EventResponse;
 import com.pulse.pass.dto.response.EventSummaryResponse;
 import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.service.EventService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -200,6 +201,26 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.artists[0]").value("Solar Beat"));
 
         verify(service).findByCode(EVENT_CODE);
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-EVT-004: missing event returns 404 with ErrorResponse")
+    void shouldReturn404WhenEventDoesNotExist() throws Exception {
+        // ARRANGE
+        when(service.findByCode("EVT-999"))
+                .thenThrow(new ResourceNotFoundException("Event not found: EVT-999"));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/events/{eventCode}", "EVT-999"))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("Event not found: EVT-999"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).findByCode("EVT-999");
     }
 
     // ------------------------------------------------------------------
