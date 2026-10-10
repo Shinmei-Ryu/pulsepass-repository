@@ -47,4 +47,10 @@ public class TicketController {
     public ResponseEntity<List<TicketResponse>> findPaidTicketsByEvent(@PathVariable String eventCode) {
         return ResponseEntity.ok(service.findPaidTicketsByEvent(eventCode));
     }
+
+    // FR-CTRL-TKT-005
+    @PatchMapping("/tickets/{ticketCode}/cancel")
+    public ResponseEntity<TicketResponse> cancel(@PathVariable String ticketCode) {
+        return ResponseEntity.ok(service.cancel(ticketCode));
+    }
 }
