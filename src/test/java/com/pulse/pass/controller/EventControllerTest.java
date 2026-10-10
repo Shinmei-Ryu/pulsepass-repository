@@ -224,6 +224,30 @@ class EventControllerTest {
     }
 
     // ------------------------------------------------------------------
+    // GET /api/events/published
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-EVT-005: published events returns 200 and a list")
+    void shouldReturnPublishedEvents() throws Exception {
+        // ARRANGE
+        when(service.findPublishedEvents()).thenReturn(List.of(eventSummary(), eventSummary()));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/events/published"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].eventCode").value("CMF-2026"))
+                .andExpect(jsonPath("$[0].status").value("PUBLISHED"))
+                .andExpect(jsonPath("$[0].venueName").value("Marina Convention Center"));
+
+        verify(service).findPublishedEvents();
+        // "published" must not be captured as {eventCode}
+        verify(service, never()).findByCode(anyString());
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
