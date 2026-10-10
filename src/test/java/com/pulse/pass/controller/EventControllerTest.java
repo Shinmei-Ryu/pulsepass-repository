@@ -142,6 +142,21 @@ class EventControllerTest {
         verify(service, never()).create(any(CreateEventRequest.class));
     }
 
+    @Test
+    void shouldReturn400WhenCategoryEnumValueIsInvalid() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY.replace("MUSIC", "FLYING")))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Malformed or invalid JSON request"))
+                .andExpect(jsonPath("$.details.body").exists());
+
+        verify(service, never()).create(any(CreateEventRequest.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
