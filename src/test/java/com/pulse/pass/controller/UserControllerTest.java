@@ -18,6 +18,7 @@ import java.time.LocalDate;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.never;
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
@@ -79,6 +80,24 @@ class UserControllerTest {
         assertThat(sent.firstName()).isEqualTo("Andrea");
         assertThat(sent.lastName()).isEqualTo("Lopez");
         assertThat(sent.birthDate()).isEqualTo(LocalDate.of(2000, 5, 10));
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-USR-002: invalid email returns 400 with details and never calls Service")
+    void shouldReturn400WhenEmailIsInvalid() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY.replace("andrea@email.com", "not-an-email")))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.details.email").value("Email must be a valid email address"));
+
+        verify(service, never()).register(any(RegisterUserRequest.class));
     }
 
     // ------------------------------------------------------------------
