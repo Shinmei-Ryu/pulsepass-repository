@@ -13,8 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.anyLong;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -28,6 +28,11 @@ class ArtistControllerTest {
 
     @MockitoBean
     private ArtistService service;
+
+    // ------------------------------------------------------------------
+    // GET /api/artists/{id}
+    // ------------------------------------------------------------------
+
 
     @Test
     @DisplayName("TEST-CTRL-ART-001: find by id returns 200")
@@ -66,6 +71,20 @@ class ArtistControllerTest {
                 .andExpect(jsonPath("$.details").isMap());
 
         verify(service).findById(99L);
+    }
+
+    @Test
+    void shouldReturn400WhenArtistIdIsNotNumeric() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/artists/{id}", "abc"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.error").value("Bad Request"))
+                .andExpect(jsonPath("$.message").value("Invalid request parameter"))
+                .andExpect(jsonPath("$.details.id").value("Invalid value: abc"));
+
+        verify(service, never()).findById(anyLong());
     }
 
 
