@@ -56,4 +56,10 @@ public class EventController {
             @PathVariable Long artistId) {
         return ResponseEntity.ok(service.addArtist(eventCode, artistId));
     }
+
+    // FR-CTRL-EVT-006
+    @GetMapping("/by-artist")
+    public ResponseEntity<List<EventSummaryResponse>> findByArtist(@RequestParam String stageName) {
+        return ResponseEntity.ok(service.findByArtist(stageName));
+    }
 }
