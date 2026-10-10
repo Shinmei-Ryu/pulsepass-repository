@@ -14,6 +14,8 @@ import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
 
+import java.util.List;
+
 import static org.mockito.Mockito.verify;
 import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -71,6 +73,26 @@ class VenueControllerTest {
                 .andExpect(jsonPath("$.details").isMap());
 
         verify(service).findByCode("VEN-999");
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-VEN-003: active venues returns 200 and a list")
+    void shouldReturnActiveVenues() throws Exception {
+        // ARRANGE
+        when(service.findActiveVenues()).thenReturn(List.of(
+                venue("VEN-SMR-01", "Marina Convention Center"),
+                venue("VEN-BOG-01", "Plaza Mayor")));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/venues/active"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].code").value("VEN-SMR-01"))
+                .andExpect(jsonPath("$[0].active").value(true))
+                .andExpect(jsonPath("$[1].code").value("VEN-BOG-01"));
+
+        verify(service).findActiveVenues();
     }
 
     // ------------------------------------------------------------------
