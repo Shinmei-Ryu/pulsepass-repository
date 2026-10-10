@@ -41,4 +41,10 @@ public class TicketController {
     public ResponseEntity<List<TicketResponse>> findByUserEmail(@RequestParam String email) {
         return ResponseEntity.ok(service.findByUserEmail(email));
     }
+
+    // FR-CTRL-TKT-004
+    @GetMapping("/events/{eventCode}/tickets/paid")
+    public ResponseEntity<List<TicketResponse>> findPaidTicketsByEvent(@PathVariable String eventCode) {
+        return ResponseEntity.ok(service.findPaidTicketsByEvent(eventCode));
+    }
 }
