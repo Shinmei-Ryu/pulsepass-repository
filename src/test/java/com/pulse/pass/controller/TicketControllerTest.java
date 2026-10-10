@@ -4,6 +4,7 @@ import com.pulse.pass.domain.TicketStatus;
 import com.pulse.pass.domain.TicketType;
 import com.pulse.pass.dto.request.PurchaseTicketRequest;
 import com.pulse.pass.dto.response.TicketResponse;
+import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.service.TicketService;
@@ -140,6 +141,28 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$.status").value(404))
                 .andExpect(jsonPath("$.error").value("Not Found"))
                 .andExpect(jsonPath("$.message").value("User not found: andrea@email.com"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).purchase(any(PurchaseTicketRequest.class));
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-TKT-004 / AC-CTRL-010: business rule (minimum age) returns 409")
+    void shouldReturn409WhenPurchaseViolatesBusinessRule() throws Exception {
+        // ARRANGE
+        when(service.purchase(any(PurchaseTicketRequest.class)))
+                .thenThrow(new BusinessRuleException("User does not meet minimum age for event: CMF-2026"));
+
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/tickets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("User does not meet minimum age for event: CMF-2026"))
                 .andExpect(jsonPath("$.details").isMap());
 
         verify(service).purchase(any(PurchaseTicketRequest.class));
