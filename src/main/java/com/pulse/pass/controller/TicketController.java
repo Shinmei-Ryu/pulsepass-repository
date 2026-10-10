@@ -8,6 +8,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.List;
+
 @RestController
 @RequestMapping("/api")
 public class TicketController {
@@ -32,5 +34,11 @@ public class TicketController {
     @GetMapping("/tickets/{ticketCode}")
     public ResponseEntity<TicketResponse> findByCode(@PathVariable String ticketCode) {
         return ResponseEntity.ok(service.findByCode(ticketCode));
+    }
+
+    // FR-CTRL-TKT-003
+    @GetMapping("/tickets/by-user")
+    public ResponseEntity<List<TicketResponse>> findByUserEmail(@RequestParam String email) {
+        return ResponseEntity.ok(service.findByUserEmail(email));
     }
 }
