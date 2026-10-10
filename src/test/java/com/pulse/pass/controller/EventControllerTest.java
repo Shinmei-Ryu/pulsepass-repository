@@ -338,6 +338,27 @@ class EventControllerTest {
     }
 
     // ------------------------------------------------------------------
+    // GET /api/events/by-artist?stageName=...
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-EVT-009: events by artist returns 200 and a list")
+    void shouldReturnEventsByArtist() throws Exception {
+        // ARRANGE
+        when(service.findByArtist("Solar Beat")).thenReturn(List.of(eventSummary()));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/events/by-artist").param("stageName", "Solar Beat"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].eventCode").value("CMF-2026"));
+
+        verify(service).findByArtist("Solar Beat");
+        verify(service, never()).findByCode(anyString());
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
