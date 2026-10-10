@@ -25,8 +25,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
@@ -245,6 +244,26 @@ class EventControllerTest {
         verify(service).findPublishedEvents();
         // "published" must not be captured as {eventCode}
         verify(service, never()).findByCode(anyString());
+    }
+
+    // ------------------------------------------------------------------
+    // PATCH /api/events/{eventCode}/publish
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-EVT-006: valid publish returns 200")
+    void shouldPublishEvent() throws Exception {
+        // ARRANGE
+        when(service.publish(EVENT_CODE)).thenReturn(eventResponse(EventStatus.PUBLISHED, List.of()));
+
+        // ACT + ASSERT
+        mockMvc.perform(patch("/api/events/{eventCode}/publish", EVENT_CODE))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.eventCode").value("CMF-2026"))
+                .andExpect(jsonPath("$.status").value("PUBLISHED"));
+
+        verify(service).publish(EVENT_CODE);
     }
 
     // ------------------------------------------------------------------
