@@ -5,6 +5,7 @@ import com.pulse.pass.domain.TicketType;
 import com.pulse.pass.dto.request.PurchaseTicketRequest;
 import com.pulse.pass.dto.response.TicketResponse;
 import com.pulse.pass.exception.GlobalExceptionHandler;
+import com.pulse.pass.exception.ResourceNotFoundException;
 import com.pulse.pass.service.TicketService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -120,6 +121,28 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$.details.body").exists());
 
         verify(service, never()).purchase(any(PurchaseTicketRequest.class));
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-TKT-003: missing user returns 404 with ErrorResponse")
+    void shouldReturn404WhenUserDoesNotExist() throws Exception {
+        // ARRANGE
+        when(service.purchase(any(PurchaseTicketRequest.class)))
+                .thenThrow(new ResourceNotFoundException("User not found: andrea@email.com"));
+
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/tickets")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY))
+                .andExpect(status().isNotFound())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(404))
+                .andExpect(jsonPath("$.error").value("Not Found"))
+                .andExpect(jsonPath("$.message").value("User not found: andrea@email.com"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).purchase(any(PurchaseTicketRequest.class));
     }
 
     // ------------------------------------------------------------------
