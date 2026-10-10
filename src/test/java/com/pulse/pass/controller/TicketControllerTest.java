@@ -235,6 +235,27 @@ class TicketControllerTest {
     }
 
     // ------------------------------------------------------------------
+    // GET /api/events/{eventCode}/tickets/paid
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-TKT-007: PAID tickets by event returns 200 and a list")
+    void shouldReturnPaidTicketsByEvent() throws Exception {
+        // ARRANGE
+        when(service.findPaidTicketsByEvent(EVENT_CODE)).thenReturn(List.of(ticket(TicketStatus.PAID)));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/events/{eventCode}/tickets/paid", EVENT_CODE))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(1))
+                .andExpect(jsonPath("$[0].eventCode").value("CMF-2026"))
+                .andExpect(jsonPath("$[0].status").value("PAID"));
+
+        verify(service).findPaidTicketsByEvent(EVENT_CODE);
+    }
+
+    // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
