@@ -274,6 +274,27 @@ class TicketControllerTest {
         verify(service).cancel(TICKET_CODE);
     }
 
+    @Test
+    @DisplayName("TEST-CTRL-TKT-009 / AC-CTRL-012: invalid cancel returns 409")
+    void shouldReturn409WhenTicketCannotBeCancelled() throws Exception {
+        // ARRANGE
+        when(service.cancel(TICKET_CODE))
+                .thenThrow(new BusinessRuleException("Only PAID tickets can be cancelled: TCK-CMF-2026-1"));
+
+        // ACT + ASSERT
+        mockMvc.perform(patch("/api/tickets/{ticketCode}/cancel", TICKET_CODE))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Only PAID tickets can be cancelled: TCK-CMF-2026-1"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).cancel(TICKET_CODE);
+    }
+
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
