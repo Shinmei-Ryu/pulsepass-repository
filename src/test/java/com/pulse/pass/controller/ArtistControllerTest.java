@@ -13,6 +13,8 @@ import org.springframework.http.MediaType;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.anyLong;
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
@@ -122,6 +124,33 @@ class ArtistControllerTest {
                 .andExpect(jsonPath("$.message").value("Artist not found: Nobody"));
 
         verify(service).findByStageName("Nobody");
+    }
+
+    // ------------------------------------------------------------------
+    // GET /api/artists/active
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-ART-004: active artists returns 200 and a list")
+    void shouldReturnActiveArtists() throws Exception {
+        // ARRANGE
+        when(service.findActiveArtists()).thenReturn(List.of(
+                artist(1L, "Neon Waves"),
+                artist(2L, "Solar Beat")));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/artists/active"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.length()").value(2))
+                .andExpect(jsonPath("$[0].stageName").value("Neon Waves"))
+                .andExpect(jsonPath("$[1].stageName").value("Solar Beat"))
+                .andExpect(jsonPath("$[0].active").value(true));
+
+        verify(service).findActiveArtists();
+        // "active" must not be captured as {id}
+        verify(service, never()).findById(anyLong());
+        verify(service, never()).findByStageName(anyString());
     }
 
 
