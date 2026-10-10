@@ -33,4 +33,10 @@ public class UserController {
     public ResponseEntity<UserResponse> findByEmail(@RequestParam String email) {
         return ResponseEntity.ok(service.findByEmail(email));
     }
+
+    // FR-CTRL-USR-003
+    @GetMapping("/by-username")
+    public ResponseEntity<UserResponse> findByUsername(@RequestParam String username) {
+        return ResponseEntity.ok(service.findByUsername(username));
+    }
 }
