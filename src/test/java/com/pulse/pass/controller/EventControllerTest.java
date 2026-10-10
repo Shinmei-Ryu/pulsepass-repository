@@ -24,6 +24,7 @@ import java.util.List;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -177,6 +178,28 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.details").isMap());
 
         verify(service).create(any(CreateEventRequest.class));
+    }
+
+    // ------------------------------------------------------------------
+    // GET /api/events/{eventCode}
+    // ------------------------------------------------------------------
+
+    @Test
+    @DisplayName("TEST-CTRL-EVT-003: existing event returns 200")
+    void shouldReturnEventByCode() throws Exception {
+        // ARRANGE
+        when(service.findByCode(EVENT_CODE))
+                .thenReturn(eventResponse(EventStatus.PUBLISHED, List.of("Solar Beat")));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/events/{eventCode}", EVENT_CODE))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.eventCode").value("CMF-2026"))
+                .andExpect(jsonPath("$.status").value("PUBLISHED"))
+                .andExpect(jsonPath("$.artists[0]").value("Solar Beat"));
+
+        verify(service).findByCode(EVENT_CODE);
     }
 
     // ------------------------------------------------------------------
