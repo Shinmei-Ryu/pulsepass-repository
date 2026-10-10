@@ -2,6 +2,7 @@ package com.pulse.pass.controller;
 
 import com.pulse.pass.dto.request.RegisterUserRequest;
 import com.pulse.pass.dto.response.UserResponse;
+import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.service.UserService;
@@ -163,6 +164,24 @@ class UserControllerTest {
                 .andExpect(status().isConflict())
                 .andExpect(jsonPath("$.status").value(409))
                 .andExpect(jsonPath("$.message").value("Email already exists: andrea@email.com"));
+
+        verify(service).register(any(RegisterUserRequest.class));
+    }
+
+    @Test
+    @DisplayName("BR-USER-005: future birth date rejected by Service returns 409")
+    void shouldReturn409WhenBirthDateIsInTheFuture() throws Exception {
+        // ARRANGE
+        when(service.register(any(RegisterUserRequest.class)))
+                .thenThrow(new BusinessRuleException("Birth date cannot be in the future."));
+
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY.replace("2000-05-10", "2999-01-01")))
+                .andExpect(status().isConflict())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.message").value("Birth date cannot be in the future."));
 
         verify(service).register(any(RegisterUserRequest.class));
     }
