@@ -126,6 +126,18 @@ class ArtistControllerTest {
         verify(service).findByStageName("Nobody");
     }
 
+    @Test
+    void shouldReturn400WhenStageNameParamIsMissing() throws Exception {
+        mockMvc.perform(get("/api/artists/by-stage-name"))
+                .andExpect(status().isBadRequest())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Missing request parameter"))
+                .andExpect(jsonPath("$.details.stageName").value("Parameter is required"));
+
+        verify(service, never()).findByStageName(anyString());
+    }
+
     // ------------------------------------------------------------------
     // GET /api/artists/active
     // ------------------------------------------------------------------
