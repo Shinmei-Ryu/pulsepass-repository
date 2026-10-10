@@ -2,6 +2,7 @@ package com.pulse.pass.controller;
 
 import com.pulse.pass.dto.request.RegisterUserRequest;
 import com.pulse.pass.dto.response.UserResponse;
+import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.service.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -124,6 +125,28 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.details.birthDate").value("Birth date is required"));
 
         verify(service, never()).register(any(RegisterUserRequest.class));
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-USR-003 / BR-USER-001: duplicated username returns 409")
+    void shouldReturn409WhenUsernameAlreadyExists() throws Exception {
+        // ARRANGE
+        when(service.register(any(RegisterUserRequest.class)))
+                .thenThrow(new DuplicateResourceException("Username already exists: andrea"));
+
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Username already exists: andrea"))
+                .andExpect(jsonPath("$.details").isMap());
+
+        verify(service).register(any(RegisterUserRequest.class));
     }
 
     // ------------------------------------------------------------------
