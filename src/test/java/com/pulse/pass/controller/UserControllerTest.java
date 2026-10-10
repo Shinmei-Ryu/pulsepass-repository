@@ -224,6 +224,23 @@ class UserControllerTest {
         verify(service).findByEmail("nobody@email.com");
     }
 
+    @Test
+    @DisplayName("TEST-CTRL-USR-005: find by username returns 200")
+    void shouldReturnUserByUsername() throws Exception {
+        // ARRANGE
+        when(service.findByUsername("andrea")).thenReturn(userResponse());
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/users/by-username").param("username", "andrea"))
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.username").value("andrea"))
+                .andExpect(jsonPath("$.email").value("andrea@email.com"));
+
+        verify(service).findByUsername("andrea");
+        verify(service, never()).findByEmail(anyString());
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
