@@ -5,6 +5,7 @@ import com.pulse.pass.domain.EventStatus;
 import com.pulse.pass.dto.request.CreateEventRequest;
 import com.pulse.pass.dto.response.EventResponse;
 import com.pulse.pass.dto.response.EventSummaryResponse;
+import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.exception.ResourceNotFoundException;
@@ -262,6 +263,26 @@ class EventControllerTest {
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(jsonPath("$.eventCode").value("CMF-2026"))
                 .andExpect(jsonPath("$.status").value("PUBLISHED"));
+
+        verify(service).publish(EVENT_CODE);
+    }
+
+    @Test
+    @DisplayName("TEST-CTRL-EVT-007: invalid publish returns 409 with ErrorResponse")
+    void shouldReturn409WhenEventCannotBePublished() throws Exception {
+        // ARRANGE
+        when(service.publish(EVENT_CODE))
+                .thenThrow(new BusinessRuleException("Only DRAFT events can be published: CMF-2026"));
+
+        // ACT + ASSERT
+        mockMvc.perform(patch("/api/events/{eventCode}/publish", EVENT_CODE))
+                .andExpect(status().isConflict())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.timestamp").exists())
+                .andExpect(jsonPath("$.status").value(409))
+                .andExpect(jsonPath("$.error").value("Conflict"))
+                .andExpect(jsonPath("$.message").value("Only DRAFT events can be published: CMF-2026"))
+                .andExpect(jsonPath("$.details").isMap());
 
         verify(service).publish(EVENT_CODE);
     }
