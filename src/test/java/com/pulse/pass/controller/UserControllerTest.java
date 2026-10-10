@@ -100,6 +100,32 @@ class UserControllerTest {
         verify(service, never()).register(any(RegisterUserRequest.class));
     }
 
+    @Test
+    void shouldReturn400WhenRequiredFieldsAreMissing() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content("""
+                                {
+                                  "username": "",
+                                  "email": "",
+                                  "firstName": "",
+                                  "lastName": "",
+                                  "birthDate": null
+                                }
+                                """))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.details.username").value("Username is required"))
+                .andExpect(jsonPath("$.details.email").value("Email is required"))
+                .andExpect(jsonPath("$.details.firstName").value("First name is required"))
+                .andExpect(jsonPath("$.details.lastName").value("Last name is required"))
+                .andExpect(jsonPath("$.details.birthDate").value("Birth date is required"));
+
+        verify(service, never()).register(any(RegisterUserRequest.class));
+    }
+
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
