@@ -11,7 +11,7 @@ import java.time.LocalDateTime;
 public record CreateEventRequest(
         @NotBlank(message = "Event code is required")
         String eventCode,
-        @NotBlank(message = "Name is required")
+        @NotBlank(message = "Event name is required")
         String name,
         @Size(max = 500, message = "Description cannot contain more than 500 characters")
         String description,
