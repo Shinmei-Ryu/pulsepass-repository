@@ -103,7 +103,7 @@ class TicketControllerTest {
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Request validation failed"))
-                .andExpect(jsonPath("$.details.userEmail").value("User email must be a valid email address"))
+                .andExpect(jsonPath("$.details.userEmail").value("Email must have a valid format"))
                 .andExpect(jsonPath("$.details.eventCode").value("Event code is required"))
                 .andExpect(jsonPath("$.details.type").value("Ticket type is required"));
 

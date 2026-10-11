@@ -100,7 +100,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.status").value(400))
                 .andExpect(jsonPath("$.error").value("Bad Request"))
                 .andExpect(jsonPath("$.message").value("Request validation failed"))
-                .andExpect(jsonPath("$.details.email").value("Email must be a valid email address"));
+                .andExpect(jsonPath("$.details.email").value("Email must have a valid format"));
 
         verify(service, never()).register(any(RegisterUserRequest.class));
     }
