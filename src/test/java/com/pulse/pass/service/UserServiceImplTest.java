@@ -1,5 +1,11 @@
 package com.pulse.pass.service;
 
+import com.pulse.pass.domain.Role;
+import com.pulse.pass.domain.UserCredential;
+import com.pulse.pass.domain.UserRole;
+import com.pulse.pass.repository.UserCredentialRepository;
+import com.pulse.pass.repository.UserRoleRepository;
+import org.springframework.security.crypto.password.PasswordEncoder;
 import com.pulse.pass.domain.User;
 import com.pulse.pass.domain.UserProfile;
 import com.pulse.pass.dto.request.RegisterUserRequest;
@@ -33,6 +39,16 @@ public class UserServiceImplTest {
 
     private static final String USERNAME = "andrea";
     private static final String EMAIL = "andrea@email.com";
+    private static final String PASSWORD = "a-strong-password";
+
+    @Mock
+    private UserCredentialRepository userCredentialRepository;
+
+    @Mock
+    private UserRoleRepository userRoleRepository;
+
+    @Mock
+    private PasswordEncoder passwordEncoder;
 
     @Mock
     private UserRepository userRepository;
@@ -51,8 +67,8 @@ public class UserServiceImplTest {
     // ------------------------------------------------------------------
 
     @Test
-    @DisplayName("TEST-USER-001 / BR-USER-003 / BR-USER-004: valid registration creates active User and UserProfile")
-    void register_validRequest_createsActiveUserAndProfile() {
+    @DisplayName("TEST-USER-001 / BR-USER-003 / BR-USER-004: valid registration creates active User, UserProfile, hashed credential and USER role")
+    void register_validRequest_createsUserProfileCredentialAndRole() {
         // ARRANGE
         RegisterUserRequest request = registerRequest(LocalDate.of(2000, 5, 10));
         UserResponse expected = userResponse();
@@ -60,6 +76,7 @@ public class UserServiceImplTest {
         when(userRepository.existsByEmailIgnoreCase(EMAIL)).thenReturn(false);
         when(userRepository.save(any(User.class))).thenAnswer(inv -> inv.getArgument(0));
         when(userProfileRepository.save(any(UserProfile.class))).thenAnswer(inv -> inv.getArgument(0));
+        when(passwordEncoder.encode(PASSWORD)).thenReturn("encoded-hash");
         when(mapper.toResponse(any(User.class))).thenReturn(expected);
 
         // ACT
@@ -68,12 +85,18 @@ public class UserServiceImplTest {
         // ASSERT
         ArgumentCaptor<User> userCaptor = ArgumentCaptor.forClass(User.class);
         ArgumentCaptor<UserProfile> profileCaptor = ArgumentCaptor.forClass(UserProfile.class);
-        InOrder inOrder = inOrder(userRepository, userProfileRepository);
+        ArgumentCaptor<UserCredential> credentialCaptor = ArgumentCaptor.forClass(UserCredential.class);
+        ArgumentCaptor<UserRole> roleCaptor = ArgumentCaptor.forClass(UserRole.class);
+        InOrder inOrder = inOrder(userRepository, userProfileRepository, userCredentialRepository, userRoleRepository);
         inOrder.verify(userRepository).save(userCaptor.capture());
         inOrder.verify(userProfileRepository).save(profileCaptor.capture());
+        inOrder.verify(userCredentialRepository).save(credentialCaptor.capture());
+        inOrder.verify(userRoleRepository).save(roleCaptor.capture());
 
         User savedUser = userCaptor.getValue();
         UserProfile savedProfile = profileCaptor.getValue();
+        UserCredential savedCredential = credentialCaptor.getValue();
+        UserRole savedRole = roleCaptor.getValue();
 
         assertThat(savedUser.getUsername()).isEqualTo(USERNAME);
         assertThat(savedUser.getEmail()).isEqualTo(EMAIL);
@@ -86,6 +109,12 @@ public class UserServiceImplTest {
         assertThat(savedProfile.getPhone()).isEqualTo("3001234567");
         assertThat(savedProfile.getCity()).isEqualTo("Santa Marta");
         assertThat(savedProfile.getBirthDate()).isEqualTo(LocalDate.of(2000, 5, 10));
+
+        assertThat(savedCredential.getUser()).isSameAs(savedUser);
+        assertThat(savedCredential.getPasswordHash()).isEqualTo("encoded-hash").isNotEqualTo(PASSWORD);
+
+        assertThat(savedRole.getUser()).isSameAs(savedUser);
+        assertThat(savedRole.getRole()).isEqualTo(Role.USER);
 
         assertThat(result).isEqualTo(expected);
         verify(mapper).toResponse(savedUser);
@@ -108,6 +137,9 @@ public class UserServiceImplTest {
         verify(userRepository, never()).existsByEmailIgnoreCase(anyString());
         verify(userRepository, never()).save(any(User.class));
         verify(userProfileRepository, never()).save(any(UserProfile.class));
+        verify(userCredentialRepository, never()).save(any(UserCredential.class));
+        verify(userRoleRepository, never()).save(any(UserRole.class));
+        verifyNoInteractions(passwordEncoder);
     }
 
     @Test
@@ -127,6 +159,9 @@ public class UserServiceImplTest {
                 .hasMessageContaining(EMAIL);
         verify(userRepository, never()).save(any(User.class));
         verify(userProfileRepository, never()).save(any(UserProfile.class));
+        verify(userCredentialRepository, never()).save(any(UserCredential.class));
+        verify(userRoleRepository, never()).save(any(UserRole.class));
+        verifyNoInteractions(passwordEncoder);
     }
 
     @Test
@@ -144,6 +179,9 @@ public class UserServiceImplTest {
         assertThat(thrown).isInstanceOf(BusinessRuleException.class);
         verify(userRepository, never()).save(any(User.class));
         verify(userProfileRepository, never()).save(any(UserProfile.class));
+        verify(userCredentialRepository, never()).save(any(UserCredential.class));
+        verify(userRoleRepository, never()).save(any(UserRole.class));
+        verifyNoInteractions(passwordEncoder);
     }
 
     // ------------------------------------------------------------------
@@ -216,13 +254,32 @@ public class UserServiceImplTest {
         verify(mapper, never()).toResponse(any(User.class));
     }
 
+    @Test
+    @DisplayName("SEC: password longer than 72 bytes throws BusinessRuleException")
+    void register_passwordLongerThan72Bytes_throwsBusinessRule() {
+        // ARRANGE
+        String multibytePassword = "€".repeat(25); // 25 caracteres, 75 bytes en UTF-8
+        RegisterUserRequest request = new RegisterUserRequest(USERNAME, EMAIL, multibytePassword,
+                "Andrea", "Lopez", "3001234567", "Santa Marta", LocalDate.of(2000, 5, 10));
+        when(userRepository.existsByUsername(USERNAME)).thenReturn(false);
+        when(userRepository.existsByEmailIgnoreCase(EMAIL)).thenReturn(false);
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.register(request));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(BusinessRuleException.class);
+        verify(userRepository, never()).save(any(User.class));
+        verifyNoInteractions(passwordEncoder);
+    }
+
 
     // ------------------------------------------------------------------
     // Helpers
     // ------------------------------------------------------------------
 
     private RegisterUserRequest registerRequest(LocalDate birthDate) {
-        return new RegisterUserRequest(USERNAME, EMAIL, "Andrea", "Lopez",
+        return new RegisterUserRequest(USERNAME, EMAIL, PASSWORD, "Andrea", "Lopez",
                 "3001234567", "Santa Marta", birthDate);
     }
 
