@@ -121,4 +121,32 @@ class SecurityPersistenceIT {
                 .setParameter("role", role)
                 .executeUpdate();
     }
+
+    @Test
+    void shouldFindCredentialByUsernameOrEmailIgnoringEmailCase() {
+
+        User user = userRepository.save(new User("andrea.login", "Andrea.Login@Email.com", true));
+        credentialRepository.save(new UserCredential(user, FAKE_HASH));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(credentialRepository.findByUserIdentifier("andrea.login")).hasSize(1);
+        assertThat(credentialRepository.findByUserIdentifier("andrea.login@email.com")).hasSize(1);
+        assertThat(credentialRepository.findByUserIdentifier("andrea.login").get(0).getUser().getUsername())
+                .isEqualTo("andrea.login");
+
+        // el username se compara exacto; solo el correo ignora mayúsculas
+        assertThat(credentialRepository.findByUserIdentifier("ANDREA.LOGIN")).isEmpty();
+        assertThat(credentialRepository.findByUserIdentifier("nobody")).isEmpty();
+    }
+
+    @Test
+    void shouldNotFindLoginForUserWithoutCredential() {
+
+        userRepository.save(new User("legacy.login", "legacy.login@email.com", true));
+        entityManager.flush();
+        entityManager.clear();
+
+        assertThat(credentialRepository.findByUserIdentifier("legacy.login")).isEmpty();
+    }
 }
