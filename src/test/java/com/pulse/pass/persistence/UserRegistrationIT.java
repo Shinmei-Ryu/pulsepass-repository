@@ -79,10 +79,10 @@ class UserRegistrationIT {
         long credentialsBefore = credentialRepository.count();
         long profilesBefore = profileRepository.count();
 
-        doThrow(new IllegalStateException("simulated failure"))
+        doThrow(new SimulatedFailureException())
                 .when(roleRepository).save(any(UserRole.class));
 
-        assertThrows(IllegalStateException.class,
+        assertThrows(SimulatedFailureException.class,
                 () -> userService.register(request("atomic.fail", "atomic.fail@email.com")));
 
         assertThat(userRepository.findByUsername("atomic.fail")).isEmpty();
@@ -94,5 +94,12 @@ class UserRegistrationIT {
         return new RegisterUserRequest(
                 username, email, PASSWORD, "Atomic", "Test",
                 "3001234567", "Santa Marta", LocalDate.of(1995, 4, 12));
+    }
+
+    private static class SimulatedFailureException extends RuntimeException {
+
+        SimulatedFailureException() {
+            super("simulated failure");
+        }
     }
 }
