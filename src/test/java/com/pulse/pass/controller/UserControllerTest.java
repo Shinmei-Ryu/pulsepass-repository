@@ -37,16 +37,17 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 class UserControllerTest {
 
     private static final String VALID_BODY = """
-            {
-              "username": "andrea",
-              "email": "andrea@email.com",
-              "firstName": "Andrea",
-              "lastName": "Lopez",
-              "phone": "3001234567",
-              "city": "Santa Marta",
-              "birthDate": "2000-05-10"
-            }
-            """;
+        {
+          "username": "andrea",
+          "email": "andrea@email.com",
+          "password": "a-strong-password",
+          "firstName": "Andrea",
+          "lastName": "Lopez",
+          "phone": "3001234567",
+          "city": "Santa Marta",
+          "birthDate": "2000-05-10"
+        }
+        """;
 
     @Autowired
     private MockMvc mockMvc;
@@ -73,6 +74,8 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.username").value("andrea"))
                 .andExpect(jsonPath("$.email").value("andrea@email.com"))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.active").value(true))
                 .andExpect(jsonPath("$.firstName").value("Andrea"))
                 .andExpect(jsonPath("$.lastName").value("Lopez"))
@@ -115,6 +118,7 @@ class UserControllerTest {
                                 {
                                   "username": "",
                                   "email": "",
+                                  "password": null,
                                   "firstName": "",
                                   "lastName": "",
                                   "birthDate": null
@@ -125,6 +129,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Request validation failed"))
                 .andExpect(jsonPath("$.details.username").value("Username is required"))
                 .andExpect(jsonPath("$.details.email").value("Email is required"))
+                .andExpect(jsonPath("$.details.password").value("Password is required"))
                 .andExpect(jsonPath("$.details.firstName").value("First name is required"))
                 .andExpect(jsonPath("$.details.lastName").value("Last name is required"))
                 .andExpect(jsonPath("$.details.birthDate").value("Birth date is required"));
@@ -240,6 +245,21 @@ class UserControllerTest {
 
         verify(service).findByUsername("andrea");
         verify(service, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void shouldReturn400WhenPasswordIsTooShort() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY.replace("a-strong-password", "short")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.details.password")
+                        .value("Password must contain between 12 and 72 characters"));
+
+        verify(service, never()).register(any(RegisterUserRequest.class));
     }
 
     // ------------------------------------------------------------------
