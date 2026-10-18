@@ -19,6 +19,7 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
     // FR-TKT-002 / AC-005: recuperar ticket por código
     Optional<Ticket> findByTicketCode(String ticketCode);
 
+
     // FR-TKT-006: tickets de un usuario por email (Ticket -> User -> email)
     List<Ticket> findByUser_Email(String email);
 
@@ -53,6 +54,9 @@ public interface TicketRepository extends JpaRepository<Ticket, Long> {
               AND t.status = com.pulse.pass.domain.TicketStatus.PAID
             """)
     long countPaidByEventCode(@Param("eventCode") String eventCode);
+
+    @Query("select t.user.id from Ticket t where t.ticketCode = :ticketCode")
+    Optional<Long> findOwnerIdByTicketCode(@Param("ticketCode") String ticketCode);
 
 
 }
