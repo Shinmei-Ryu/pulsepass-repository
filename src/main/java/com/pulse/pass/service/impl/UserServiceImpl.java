@@ -17,6 +17,7 @@ import com.pulse.pass.repository.UserRepository;
 import com.pulse.pass.repository.UserRoleRepository;
 import com.pulse.pass.service.UserService;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -99,6 +100,7 @@ public class UserServiceImpl implements UserService {
 
     // FR-SVC-011
     @Override
+    @PreAuthorize("@authz.isSelfOrAdmin(#email)")
     public UserResponse findByEmail(String email) {
 
         User user = userRepository.findByEmailIgnoreCase(email)
@@ -109,6 +111,7 @@ public class UserServiceImpl implements UserService {
 
     // FR-SVC-012
     @Override
+    @PreAuthorize("@authz.isSelfByUsernameOrAdmin(#username)")
     public UserResponse findByUsername(String username) {
 
         User user = userRepository.findByUsername(username)
