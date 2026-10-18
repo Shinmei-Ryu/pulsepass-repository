@@ -4,6 +4,7 @@ import com.jayway.jsonpath.JsonPath;
 import com.pulse.pass.domain.*;
 import com.pulse.pass.dto.request.RegisterUserRequest;
 import com.pulse.pass.repository.EventRepository;
+import com.pulse.pass.repository.TicketRepository;
 import com.pulse.pass.repository.VenueRepository;
 import com.pulse.pass.service.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -22,6 +23,7 @@ import org.testcontainers.postgresql.PostgreSQLContainer;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 
+import static org.assertj.core.api.Assertions.assertThat;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -46,13 +48,15 @@ class OwnershipSecurityIT {
     @Autowired private UserService userService;
     @Autowired private VenueRepository venueRepository;
     @Autowired private EventRepository eventRepository;
+    @Autowired private TicketRepository ticketRepository;
 
     @Test
-    @DisplayName("T-SEC-009: a USER cannot buy a ticket on behalf of another email")
+    @DisplayName("T-SEC-010: a USER cannot buy a ticket on behalf of another email")
     void purchaseForAnotherEmail_returns403() throws Exception {
         givenPublishedEvent("OWN-PUB-1");
         String tokenA = registerAndLogin("own.a1");
         registerAndLogin("own.b1");
+        long ticketsBefore = ticketRepository.count();
 
         mockMvc.perform(post("/api/tickets")
                         .header("Authorization", "Bearer " + tokenA)
@@ -60,10 +64,25 @@ class OwnershipSecurityIT {
                         .content(purchaseBody("own.b1@email.com", "OWN-PUB-1")))
                 .andExpect(status().isForbidden())
                 .andExpect(jsonPath("$.message").value("Access denied"));
+
+        assertThat(ticketRepository.count()).isEqualTo(ticketsBefore);
     }
 
     @Test
-    @DisplayName("T-SEC-010: a USER cannot read or cancel a ticket owned by someone else")
+    @DisplayName("T-SEC-011: a USER can cancel their own ticket")
+    void cancelOwnTicket_returns200() throws Exception {
+        givenPublishedEvent("OWN-PUB-4");
+        String token = registerAndLogin("own.a7");
+        String ticketCode = buyTicket(token, "own.a7@email.com", "OWN-PUB-4");
+
+        mockMvc.perform(patch("/api/tickets/{code}/cancel", ticketCode)
+                        .header("Authorization", "Bearer " + token))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.status").value("CANCELLED"));
+    }
+
+    @Test
+    @DisplayName("T-SEC-009: a USER cannot read or cancel a ticket owned by someone else")
     void foreignTicket_readAndCancel_return403() throws Exception {
         givenPublishedEvent("OWN-PUB-2");
         String tokenA = registerAndLogin("own.a2");
@@ -84,7 +103,7 @@ class OwnershipSecurityIT {
     }
 
     @Test
-    @DisplayName("T-SEC-011: a USER cannot list tickets of another email")
+    @DisplayName("FR-SEC-TKT-03: a USER cannot list tickets of another email")
     void foreignTicketList_returns403() throws Exception {
         String tokenA = registerAndLogin("own.a3");
         registerAndLogin("own.b3");
@@ -99,7 +118,7 @@ class OwnershipSecurityIT {
     }
 
     @Test
-    @DisplayName("T-SEC-015: a DRAFT event answers 404 to a regular user")
+    @DisplayName("T-SEC-017: a DRAFT event answers 404 to a regular user")
     void draftEvent_asUser_returns404() throws Exception {
         givenEvent("OWN-DRAFT-1", EventStatus.DRAFT);
         String tokenA = registerAndLogin("own.a4");
@@ -110,7 +129,7 @@ class OwnershipSecurityIT {
     }
 
     @Test
-    @DisplayName("T-SEC-015: a PUBLISHED event stays public")
+    @DisplayName("T-SEC-017: a PUBLISHED event stays public")
     void publishedEvent_isPublic() throws Exception {
         givenPublishedEvent("OWN-PUB-3");
 
@@ -119,7 +138,7 @@ class OwnershipSecurityIT {
     }
 
     @Test
-    @DisplayName("T-SEC-017: a USER cannot look up another user by email")
+    @DisplayName("T-SEC-015: a USER cannot look up another user by email")
     void userByEmail_foreign_returns403_ownReturns200() throws Exception {
         String tokenA = registerAndLogin("own.a5");
         registerAndLogin("own.b5");
@@ -135,7 +154,7 @@ class OwnershipSecurityIT {
     }
 
     @Test
-    @DisplayName("T-SEC-017: a USER cannot look up another user by username")
+    @DisplayName("T-SEC-015: a USER cannot look up another user by username")
     void userByUsername_foreign_returns403_ownReturns200() throws Exception {
         String tokenA = registerAndLogin("own.a6");
         registerAndLogin("own.b6");

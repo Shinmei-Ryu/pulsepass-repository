@@ -125,7 +125,7 @@ class EventServiceImplTest {
     }
 
     @Test
-    @DisplayName("T-SEC-015: DRAFT event is hidden from regular users")
+    @DisplayName("T-SEC-017: DRAFT event is hidden from regular users")
     void findByCode_draftEventAsUser_throwsResourceNotFound() {
         // ARRANGE
         Event draft = event(EventStatus.DRAFT, futureDate(), venue(true));
@@ -141,7 +141,7 @@ class EventServiceImplTest {
     }
 
     @Test
-    @DisplayName("T-SEC-015: DRAFT event is visible to STAFF/ADMIN")
+    @DisplayName("T-SEC-017: DRAFT event is visible to STAFF/ADMIN")
     void findByCode_draftEventAsStaffOrAdmin_returnsDto() {
         // ARRANGE
         Event draft = event(EventStatus.DRAFT, futureDate(), venue(true));
@@ -158,7 +158,7 @@ class EventServiceImplTest {
     }
 
     @Test
-    @DisplayName("T-SEC-015: published event never consults authorization")
+    @DisplayName("T-SEC-017: published event never consults authorization")
     void findByCode_publishedEvent_doesNotConsultAuthz() {
         // ARRANGE
         Event event = event(EventStatus.PUBLISHED, futureDate(), venue(true));
@@ -503,7 +503,7 @@ class EventServiceImplTest {
     }
 
     @Test
-    @DisplayName("T-SEC-015: findByArtist filters DRAFT events for regular users")
+    @DisplayName("T-SEC-017: findByArtist filters DRAFT events for regular users")
     void findByArtist_draftEventAsUser_isFilteredOut() {
         // ARRANGE
         Event draft = event(EventStatus.DRAFT, futureDate(), venue(true));
@@ -522,7 +522,7 @@ class EventServiceImplTest {
     }
 
     @Test
-    @DisplayName("T-SEC-015: findByArtist keeps DRAFT events for STAFF/ADMIN")
+    @DisplayName("T-SEC-017: findByArtist keeps DRAFT events for STAFF/ADMIN")
     void findByArtist_draftEventAsStaff_isKept() {
         // ARRANGE
         Event draft = event(EventStatus.DRAFT, futureDate(), venue(true));
