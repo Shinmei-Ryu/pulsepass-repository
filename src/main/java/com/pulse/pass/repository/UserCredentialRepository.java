@@ -7,6 +7,7 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
+import java.util.Optional;
 
 @Repository
 public interface UserCredentialRepository extends JpaRepository<UserCredential, Long> {
@@ -20,4 +21,13 @@ public interface UserCredentialRepository extends JpaRepository<UserCredential, 
                or lower(u.email) = lower(:identifier)
             """)
     List<UserCredential> findByUserIdentifier(@Param("identifier") String identifier);
+
+    // Para recargar el principal desde el token: credencial + usuario en una sola consulta
+    @Query("""
+            select c
+            from UserCredential c
+            join fetch c.user
+            where c.userId = :userId
+            """)
+    Optional<UserCredential> findWithUserByUserId(@Param("userId") Long userId);
 }

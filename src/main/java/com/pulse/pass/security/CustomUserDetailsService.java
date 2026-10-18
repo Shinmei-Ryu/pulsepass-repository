@@ -43,14 +43,30 @@ public class CustomUserDetailsService implements UserDetailsService {
         UserCredential credential = matches.get(0);
         User user = credential.getUser();
 
-        Set<Role> roles = roleRepository.findByUser_Id(user.getId())
+        return new SecurityPrincipal(
+                user.getId(), user.getUsername(), user.getEmail(),
+                credential.getPasswordHash(), user.getActive(), rolesOf(user)
+        );
+    }
+
+    // Para el filtro JWT: identidad, estado y roles frescos desde la BD en cada request
+    public SecurityPrincipal loadPrincipalById(Long userId) {
+
+        UserCredential credential = credentialRepository.findWithUserByUserId(userId)
+                .orElseThrow(() -> new UsernameNotFoundException("User not found"));
+        User user = credential.getUser();
+
+        // Sin hash: este principal sirve para autorizar, no para autenticar con contraseña
+        return new SecurityPrincipal(
+                user.getId(), user.getUsername(), user.getEmail(),
+                null, user.getActive(), rolesOf(user)
+        );
+    }
+
+    private Set<Role> rolesOf(User user) {
+        return roleRepository.findByUser_Id(user.getId())
                 .stream()
                 .map(UserRole::getRole)
                 .collect(Collectors.toSet());
-
-        return new SecurityPrincipal(
-                user.getId(), user.getUsername(), user.getEmail(),
-                credential.getPasswordHash(), user.getActive(), roles
-        );
     }
 }
