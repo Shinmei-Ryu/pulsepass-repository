@@ -16,6 +16,7 @@ import com.pulse.pass.repository.TicketRepository;
 import com.pulse.pass.repository.UserRepository;
 import com.pulse.pass.service.TicketService;
 
+import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -48,7 +49,7 @@ public class TicketServiceImpl implements TicketService {
 
     // FR-SVC-013 / BR-TICKET-001..009
     @Override
-    @Transactional
+    @PreAuthorize("@authz.isSelf(#request.userEmail())")
     public TicketResponse purchase(PurchaseTicketRequest request) {
 
         // BR-TICKET-001
@@ -128,6 +129,7 @@ public class TicketServiceImpl implements TicketService {
 
     // FR-SVC-014
     @Override
+    @PreAuthorize("@authz.canViewTicket(#ticketCode)")
     public TicketResponse findByCode(String ticketCode) {
 
         Ticket ticket = ticketRepository.findByTicketCode(ticketCode)
@@ -138,6 +140,7 @@ public class TicketServiceImpl implements TicketService {
 
     // FR-SVC-015
     @Override
+    @PreAuthorize("@authz.isSelfOrAdmin(#email)")
     public List<TicketResponse> findByUserEmail(String email) {
 
         return ticketRepository.findByUserEmailIgnoreCaseOrderByPurchaseDateDesc(email)
@@ -148,6 +151,7 @@ public class TicketServiceImpl implements TicketService {
 
     // FR-SVC-016
     @Override
+    @PreAuthorize("@authz.isStaffOrAdmin()")
     public List<TicketResponse> findPaidTicketsByEvent(String eventCode) {
 
         return ticketRepository.findByEvent_EventCodeAndStatus(eventCode, TicketStatus.PAID)
@@ -158,6 +162,7 @@ public class TicketServiceImpl implements TicketService {
 
     // FR-SVC-017 / BR-TICKET-010..012
     @Override
+    @PreAuthorize("@authz.canCancelTicket(#ticketCode)")
     @Transactional
     public TicketResponse cancel(String ticketCode) {
 
@@ -182,6 +187,7 @@ public class TicketServiceImpl implements TicketService {
 
     // FR-SVC-018 / BR-TICKET-013..014
     @Override
+    @PreAuthorize("@authz.isStaffOrAdmin()")
     @Transactional
     public TicketResponse markAsUsed(String ticketCode) {
 

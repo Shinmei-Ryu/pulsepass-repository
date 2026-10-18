@@ -6,6 +6,9 @@ import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.exception.ResourceNotFoundException;
+import com.pulse.pass.security.CustomUserDetailsService;
+import com.pulse.pass.security.JwtService;
+import com.pulse.pass.security.SecurityConfig;
 import com.pulse.pass.service.UserService;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -14,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -32,26 +36,33 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @WebMvcTest(UserController.class)
-@Import(GlobalExceptionHandler.class)
+@Import({GlobalExceptionHandler.class, SecurityConfig.class})
 class UserControllerTest {
 
     private static final String VALID_BODY = """
-            {
-              "username": "andrea",
-              "email": "andrea@email.com",
-              "firstName": "Andrea",
-              "lastName": "Lopez",
-              "phone": "3001234567",
-              "city": "Santa Marta",
-              "birthDate": "2000-05-10"
-            }
-            """;
+        {
+          "username": "andrea",
+          "email": "andrea@email.com",
+          "password": "a-strong-password",
+          "firstName": "Andrea",
+          "lastName": "Lopez",
+          "phone": "3001234567",
+          "city": "Santa Marta",
+          "birthDate": "2000-05-10"
+        }
+        """;
 
     @Autowired
     private MockMvc mockMvc;
 
     @MockitoBean
     private UserService service;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService userDetailsService;
 
     // ------------------------------------------------------------------
     // POST /api/users
@@ -72,6 +83,8 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.username").value("andrea"))
                 .andExpect(jsonPath("$.email").value("andrea@email.com"))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist())
                 .andExpect(jsonPath("$.active").value(true))
                 .andExpect(jsonPath("$.firstName").value("Andrea"))
                 .andExpect(jsonPath("$.lastName").value("Lopez"))
@@ -114,6 +127,7 @@ class UserControllerTest {
                                 {
                                   "username": "",
                                   "email": "",
+                                  "password": null,
                                   "firstName": "",
                                   "lastName": "",
                                   "birthDate": null
@@ -124,6 +138,7 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.message").value("Request validation failed"))
                 .andExpect(jsonPath("$.details.username").value("Username is required"))
                 .andExpect(jsonPath("$.details.email").value("Email is required"))
+                .andExpect(jsonPath("$.details.password").value("Password is required"))
                 .andExpect(jsonPath("$.details.firstName").value("First name is required"))
                 .andExpect(jsonPath("$.details.lastName").value("Last name is required"))
                 .andExpect(jsonPath("$.details.birthDate").value("Birth date is required"));
@@ -191,6 +206,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("TEST-CTRL-USR-004: find by email returns 200")
+    @WithMockUser(roles = "USER")
     void shouldReturnUserByEmail() throws Exception {
         // ARRANGE
         when(service.findByEmail("andrea@email.com")).thenReturn(userResponse());
@@ -207,6 +223,7 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     void shouldReturn404WhenUserEmailDoesNotExist() throws Exception {
         // ARRANGE
         when(service.findByEmail("nobody@email.com"))
@@ -226,6 +243,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("TEST-CTRL-USR-005: find by username returns 200")
+    @WithMockUser(roles = "USER")
     void shouldReturnUserByUsername() throws Exception {
         // ARRANGE
         when(service.findByUsername("andrea")).thenReturn(userResponse());
@@ -239,6 +257,21 @@ class UserControllerTest {
 
         verify(service).findByUsername("andrea");
         verify(service, never()).findByEmail(anyString());
+    }
+
+    @Test
+    void shouldReturn400WhenPasswordIsTooShort() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(post("/api/users")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(VALID_BODY.replace("a-strong-password", "short")))
+                .andExpect(status().isBadRequest())
+                .andExpect(jsonPath("$.status").value(400))
+                .andExpect(jsonPath("$.message").value("Request validation failed"))
+                .andExpect(jsonPath("$.details.password")
+                        .value("Password must contain between 12 and 72 characters"));
+
+        verify(service, never()).register(any(RegisterUserRequest.class));
     }
 
     // ------------------------------------------------------------------

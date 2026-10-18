@@ -29,9 +29,7 @@ import java.util.Optional;
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
 import static org.mockito.ArgumentMatchers.*;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
 
 @ExtendWith(MockitoExtension.class)
 class EventServiceImplTest {
@@ -50,6 +48,9 @@ class EventServiceImplTest {
 
     @Mock
     private EventMapper mapper;
+
+    @Mock
+    private AuthorizationService authz;
 
     @InjectMocks
     private EventServiceImpl service;
@@ -121,6 +122,54 @@ class EventServiceImplTest {
         // ASSERT
         assertThat(result).isEmpty();
         verify(mapper, never()).toSummary(any(Event.class));
+    }
+
+    @Test
+    @DisplayName("T-SEC-017: DRAFT event is hidden from regular users")
+    void findByCode_draftEventAsUser_throwsResourceNotFound() {
+        // ARRANGE
+        Event draft = event(EventStatus.DRAFT, futureDate(), venue(true));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(draft));
+        when(authz.isStaffOrAdmin()).thenReturn(false);
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.findByCode(EVENT_CODE));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(ResourceNotFoundException.class);
+        verify(mapper, never()).toResponse(any(Event.class));
+    }
+
+    @Test
+    @DisplayName("T-SEC-017: DRAFT event is visible to STAFF/ADMIN")
+    void findByCode_draftEventAsStaffOrAdmin_returnsDto() {
+        // ARRANGE
+        Event draft = event(EventStatus.DRAFT, futureDate(), venue(true));
+        EventResponse expected = eventResponse(EventStatus.DRAFT);
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(draft));
+        when(authz.isStaffOrAdmin()).thenReturn(true);
+        when(mapper.toResponse(draft)).thenReturn(expected);
+
+        // ACT
+        EventResponse result = service.findByCode(EVENT_CODE);
+
+        // ASSERT
+        assertThat(result).isEqualTo(expected);
+    }
+
+    @Test
+    @DisplayName("T-SEC-017: published event never consults authorization")
+    void findByCode_publishedEvent_doesNotConsultAuthz() {
+        // ARRANGE
+        Event event = event(EventStatus.PUBLISHED, futureDate(), venue(true));
+        when(eventRepository.findByEventCode(EVENT_CODE)).thenReturn(Optional.of(event));
+        when(mapper.toResponse(event)).thenReturn(eventResponse(EventStatus.PUBLISHED));
+
+        // ACT
+        service.findByCode(EVENT_CODE);
+
+        // ASSERT
+        verifyNoInteractions(authz);
     }
 
     // ------------------------------------------------------------------
@@ -451,6 +500,42 @@ class EventServiceImplTest {
         // ASSERT
         assertThat(result).containsExactly(summary);
         verify(eventRepository).findByArtistStageName("Solar Beat");
+    }
+
+    @Test
+    @DisplayName("T-SEC-017: findByArtist filters DRAFT events for regular users")
+    void findByArtist_draftEventAsUser_isFilteredOut() {
+        // ARRANGE
+        Event draft = event(EventStatus.DRAFT, futureDate(), venue(true));
+        Event published = event(EventStatus.PUBLISHED, futureDate(), venue(true));
+        EventSummaryResponse summary = eventSummary();
+        when(eventRepository.findByArtistStageName("Solar Beat")).thenReturn(List.of(draft, published));
+        when(authz.isStaffOrAdmin()).thenReturn(false);
+        when(mapper.toSummary(published)).thenReturn(summary);
+
+        // ACT
+        List<EventSummaryResponse> result = service.findByArtist("Solar Beat");
+
+        // ASSERT
+        assertThat(result).containsExactly(summary);
+        verify(mapper, never()).toSummary(draft);
+    }
+
+    @Test
+    @DisplayName("T-SEC-017: findByArtist keeps DRAFT events for STAFF/ADMIN")
+    void findByArtist_draftEventAsStaff_isKept() {
+        // ARRANGE
+        Event draft = event(EventStatus.DRAFT, futureDate(), venue(true));
+        EventSummaryResponse summary = eventSummary();
+        when(eventRepository.findByArtistStageName("Solar Beat")).thenReturn(List.of(draft));
+        when(authz.isStaffOrAdmin()).thenReturn(true);
+        when(mapper.toSummary(draft)).thenReturn(summary);
+
+        // ACT
+        List<EventSummaryResponse> result = service.findByArtist("Solar Beat");
+
+        // ASSERT
+        assertThat(result).containsExactly(summary);
     }
 
     // ------------------------------------------------------------------
