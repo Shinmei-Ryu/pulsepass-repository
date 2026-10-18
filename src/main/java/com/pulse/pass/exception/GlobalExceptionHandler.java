@@ -4,6 +4,7 @@ import com.pulse.pass.dto.response.ErrorResponse;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
+import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
@@ -205,6 +206,22 @@ public class GlobalExceptionHandler {
         return ResponseEntity
                 .status(status)
                 .body(error);
+    }
+
+    @ExceptionHandler(BadCredentialsException.class)
+    public ResponseEntity<ErrorResponse> handleBadCredentials(BadCredentialsException ex) {
+
+        HttpStatus status = HttpStatus.UNAUTHORIZED;
+
+        ErrorResponse error = new ErrorResponse(
+                LocalDateTime.now(),
+                status.value(),
+                status.getReasonPhrase(),
+                "Invalid credentials",
+                Map.of()
+        );
+
+        return ResponseEntity.status(status).body(error);
     }
 
 
