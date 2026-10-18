@@ -17,6 +17,7 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
 import java.util.List;
+import java.util.Optional;
 
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.assertj.core.api.Assertions.catchThrowable;
@@ -115,6 +116,50 @@ class CustomUserDetailsServiceTest {
 
         // ACT
         Throwable thrown = catchThrowable(() -> service.loadUserByUsername("bob@email.com"));
+
+        // ASSERT
+        assertThat(thrown).isInstanceOf(UsernameNotFoundException.class);
+        verify(roleRepository, never()).findByUser_Id(anyLong());
+    }
+
+    @Test
+    void loadPrincipalById_existingUser_returnsPrincipalWithoutHash() {
+        // ARRANGE
+        User user = user(1L, "andrea", "andrea@email.com", true);
+        when(credentialRepository.findWithUserByUserId(1L))
+                .thenReturn(Optional.of(new UserCredential(user, "stored-hash")));
+        when(roleRepository.findByUser_Id(1L)).thenReturn(List.of(new UserRole(user, Role.ADMIN)));
+
+        // ACT
+        SecurityPrincipal principal = service.loadPrincipalById(1L);
+
+        // ASSERT
+        assertThat(principal.getId()).isEqualTo(1L);
+        assertThat(principal.getPassword()).isNull();
+        assertThat(principal.isEnabled()).isTrue();
+        assertThat(principal.getAuthorities().stream().map(GrantedAuthority::getAuthority))
+                .containsExactly("ROLE_ADMIN");
+    }
+
+    @Test
+    void loadPrincipalById_inactiveUser_returnsDisabledPrincipal() {
+        // ARRANGE
+        User user = user(2L, "miguel", "miguel@email.com", false);
+        when(credentialRepository.findWithUserByUserId(2L))
+                .thenReturn(Optional.of(new UserCredential(user, "stored-hash")));
+        when(roleRepository.findByUser_Id(2L)).thenReturn(List.of(new UserRole(user, Role.USER)));
+
+        // ACT + ASSERT
+        assertThat(service.loadPrincipalById(2L).isEnabled()).isFalse();
+    }
+
+    @Test
+    void loadPrincipalById_missingUser_throwsUsernameNotFound() {
+        // ARRANGE
+        when(credentialRepository.findWithUserByUserId(99L)).thenReturn(Optional.empty());
+
+        // ACT
+        Throwable thrown = catchThrowable(() -> service.loadPrincipalById(99L));
 
         // ASSERT
         assertThat(thrown).isInstanceOf(UsernameNotFoundException.class);
