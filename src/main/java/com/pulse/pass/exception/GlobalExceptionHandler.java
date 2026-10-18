@@ -2,6 +2,9 @@ package com.pulse.pass.exception;
 
 import com.pulse.pass.dto.response.ErrorResponse;
 import com.pulse.pass.security.InvalidJwtException;
+import jakarta.servlet.http.HttpServletRequest;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
@@ -12,6 +15,9 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.MissingServletRequestParameterException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.context.request.RequestAttributes;
+import org.springframework.web.context.request.RequestContextHolder;
+import org.springframework.web.context.request.ServletRequestAttributes;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import java.time.LocalDateTime;
@@ -20,6 +26,8 @@ import java.util.stream.Collectors;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+    private static final Logger log = LoggerFactory.getLogger(GlobalExceptionHandler.class);
 
     @ExceptionHandler(
             ResourceNotFoundException.class
@@ -228,7 +236,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AccessDeniedException.class)
     public ResponseEntity<ErrorResponse> handleAccessDenied(AccessDeniedException ex) {
-
+        log.warn("Access denied: {}", currentRequest());
         HttpStatus status = HttpStatus.FORBIDDEN;
 
         ErrorResponse error = new ErrorResponse(
@@ -244,7 +252,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(InvalidJwtException.class)
     public ResponseEntity<ErrorResponse> handleInvalidJwt(InvalidJwtException ex) {
-
+        log.warn("Invalid token rejected: {}", currentRequest());
         HttpStatus status = HttpStatus.UNAUTHORIZED;
 
         ErrorResponse error = new ErrorResponse(
@@ -260,7 +268,7 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(AuthenticationRequiredException.class)
     public ResponseEntity<ErrorResponse> handleAuthenticationRequired(AuthenticationRequiredException ex) {
-
+        log.warn("Unauthenticated request: {}", currentRequest());
         HttpStatus status = HttpStatus.UNAUTHORIZED;
 
         ErrorResponse error = new ErrorResponse(
@@ -273,6 +281,15 @@ public class GlobalExceptionHandler {
 
         return ResponseEntity.status(status).body(error);
     }
-
+    // Obtiene "METODO /ruta" del request en curso. Devuelve un texto neutro si no hay request
+    // (por ejemplo en un test unitario del handler), así que nunca falla.
+    private String currentRequest() {
+        RequestAttributes attributes = RequestContextHolder.getRequestAttributes();
+        if (attributes instanceof ServletRequestAttributes servletAttributes) {
+            HttpServletRequest request = servletAttributes.getRequest();
+            return request.getMethod() + " " + request.getRequestURI();
+        }
+        return "unknown request";
+    }
 
 }

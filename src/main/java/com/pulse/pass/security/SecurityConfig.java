@@ -14,6 +14,7 @@ import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+import org.springframework.security.web.context.SecurityContextHolderFilter;
 import org.springframework.web.servlet.HandlerExceptionResolver;
 
 @Configuration
@@ -37,7 +38,9 @@ public class SecurityConfig {
         // Instancias locales, no beans: Boot registraría un Filter-bean también como filtro de servlet
         RestAuthenticationEntryPoint entryPoint = new RestAuthenticationEntryPoint(resolver);
         RestAccessDeniedHandler accessDeniedHandler = new RestAccessDeniedHandler(resolver);
+        RequestIdFilter requestIdFilter = new RequestIdFilter();
         JwtAuthenticationFilter jwtFilter = new JwtAuthenticationFilter(jwtService, userDetailsService, entryPoint);
+
 
         http
                 .csrf(AbstractHttpConfigurer::disable)
@@ -48,6 +51,7 @@ public class SecurityConfig {
                 .exceptionHandling(exceptions -> exceptions
                         .authenticationEntryPoint(entryPoint)
                         .accessDeniedHandler(accessDeniedHandler))
+                .addFilterBefore(requestIdFilter, SecurityContextHolderFilter.class)
                 .addFilterBefore(jwtFilter, UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(auth -> auth
 
