@@ -18,6 +18,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -34,6 +35,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 
 @WebMvcTest(TicketController.class)
 @Import({GlobalExceptionHandler.class, SecurityConfig.class})
+@WithMockUser(roles = "USER")
 class TicketControllerTest {
 
     private static final String USER_EMAIL = "andrea@email.com";
@@ -248,6 +250,7 @@ class TicketControllerTest {
 
     @Test
     @DisplayName("TEST-CTRL-TKT-007: PAID tickets by event returns 200 and a list")
+    @WithMockUser(roles = "STAFF")
     void shouldReturnPaidTicketsByEvent() throws Exception {
         // ARRANGE
         when(service.findPaidTicketsByEvent(EVENT_CODE)).thenReturn(List.of(ticket(TicketStatus.PAID)));
@@ -309,6 +312,7 @@ class TicketControllerTest {
 
     @Test
     @DisplayName("TEST-CTRL-TKT-010: valid use returns 200")
+    @WithMockUser(roles = "STAFF")
     void shouldMarkTicketAsUsed() throws Exception {
         // ARRANGE
         when(service.markAsUsed(TICKET_CODE)).thenReturn(ticket(TicketStatus.USED));
@@ -325,6 +329,7 @@ class TicketControllerTest {
 
     @Test
     @DisplayName("TEST-CTRL-TKT-011 / AC-CTRL-014: invalid use returns 409")
+    @WithMockUser(roles = "STAFF")
     void shouldReturn409WhenTicketCannotBeUsed() throws Exception {
         // ARRANGE
         when(service.markAsUsed(TICKET_CODE))
