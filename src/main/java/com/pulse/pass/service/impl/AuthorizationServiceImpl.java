@@ -1,6 +1,8 @@
 package com.pulse.pass.service.impl;
 
+import com.pulse.pass.domain.User;
 import com.pulse.pass.repository.TicketRepository;
+import com.pulse.pass.repository.UserRepository;
 import com.pulse.pass.security.SecurityPrincipal;
 import com.pulse.pass.service.AuthorizationService;
 import org.springframework.security.core.Authentication;
@@ -13,9 +15,11 @@ import java.util.Optional;
 public class AuthorizationServiceImpl implements AuthorizationService {
 
     private final TicketRepository ticketRepository;
+    private final UserRepository userRepository;
 
-    public AuthorizationServiceImpl(TicketRepository ticketRepository) {
+    public AuthorizationServiceImpl(TicketRepository ticketRepository, UserRepository userRepository) {
         this.ticketRepository = ticketRepository;
+        this.userRepository = userRepository;
     }
 
     @Override
@@ -30,8 +34,13 @@ public class AuthorizationServiceImpl implements AuthorizationService {
 
     @Override
     public boolean isSelf(String email) {
+        // El email del request solo sirve para localizar al usuario; la decisión se toma por id.
+        // Un email inexistente da false (403), igual que uno ajeno: no permite enumerar cuentas.
         return principal()
-                .map(p -> email != null && p.getEmail().equalsIgnoreCase(email))
+                .map(p -> email != null && userRepository.findByEmailIgnoreCase(email)
+                        .map(User::getId)
+                        .filter(p.getId()::equals)
+                        .isPresent())
                 .orElse(false);
     }
 
@@ -43,7 +52,10 @@ public class AuthorizationServiceImpl implements AuthorizationService {
     @Override
     public boolean isSelfByUsernameOrAdmin(String username) {
         return isAdmin() || principal()
-                .map(p -> username != null && p.getUsername().equalsIgnoreCase(username))
+                .map(p -> username != null && userRepository.findByUsername(username)
+                        .map(User::getId)
+                        .filter(p.getId()::equals)
+                        .isPresent())
                 .orElse(false);
     }
 
