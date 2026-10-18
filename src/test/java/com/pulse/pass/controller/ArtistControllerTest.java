@@ -3,6 +3,8 @@ package com.pulse.pass.controller;
 import com.pulse.pass.dto.response.ArtistResponse;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.exception.ResourceNotFoundException;
+import com.pulse.pass.security.CustomUserDetailsService;
+import com.pulse.pass.security.JwtService;
 import com.pulse.pass.security.SecurityConfig;
 import com.pulse.pass.service.ArtistService;
 import org.junit.jupiter.api.DisplayName;
@@ -31,6 +33,12 @@ class ArtistControllerTest {
 
     @MockitoBean
     private ArtistService service;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService userDetailsService;
 
     // ------------------------------------------------------------------
     // GET /api/artists/{id}

@@ -3,6 +3,8 @@ package com.pulse.pass.controller;
 import com.pulse.pass.dto.response.VenueResponse;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.exception.ResourceNotFoundException;
+import com.pulse.pass.security.CustomUserDetailsService;
+import com.pulse.pass.security.JwtService;
 import com.pulse.pass.security.SecurityConfig;
 import com.pulse.pass.service.VenueService;
 import org.junit.jupiter.api.DisplayName;
@@ -35,6 +37,12 @@ class VenueControllerTest {
 
     @MockitoBean
     private VenueService service;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService userDetailsService;
 
     @Test
     @DisplayName("TEST-CTRL-VEN-001: existing venue returns 200 and VenueResponse")

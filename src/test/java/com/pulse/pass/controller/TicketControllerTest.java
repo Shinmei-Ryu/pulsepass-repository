@@ -7,6 +7,8 @@ import com.pulse.pass.dto.response.TicketResponse;
 import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.exception.ResourceNotFoundException;
+import com.pulse.pass.security.CustomUserDetailsService;
+import com.pulse.pass.security.JwtService;
 import com.pulse.pass.security.SecurityConfig;
 import com.pulse.pass.service.TicketService;
 import org.junit.jupiter.api.DisplayName;
@@ -51,6 +53,12 @@ class TicketControllerTest {
 
     @MockitoBean
     private TicketService service;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService userDetailsService;
 
     // ------------------------------------------------------------------
     // POST /api/tickets

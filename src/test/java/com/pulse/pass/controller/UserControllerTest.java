@@ -6,6 +6,8 @@ import com.pulse.pass.exception.BusinessRuleException;
 import com.pulse.pass.exception.DuplicateResourceException;
 import com.pulse.pass.exception.GlobalExceptionHandler;
 import com.pulse.pass.exception.ResourceNotFoundException;
+import com.pulse.pass.security.CustomUserDetailsService;
+import com.pulse.pass.security.JwtService;
 import com.pulse.pass.security.SecurityConfig;
 import com.pulse.pass.service.UserService;
 import org.junit.jupiter.api.DisplayName;
@@ -54,6 +56,12 @@ class UserControllerTest {
 
     @MockitoBean
     private UserService service;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService userDetailsService;
 
     // ------------------------------------------------------------------
     // POST /api/users
