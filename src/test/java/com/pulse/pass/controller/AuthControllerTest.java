@@ -1,9 +1,11 @@
 package com.pulse.pass.controller;
 
+import com.pulse.pass.domain.Role;
 import com.pulse.pass.dto.request.LoginRequest;
 import com.pulse.pass.dto.response.AuthResponse;
+import com.pulse.pass.dto.response.AuthenticatedUserResponse;
 import com.pulse.pass.exception.GlobalExceptionHandler;
-import com.pulse.pass.security.SecurityConfig;
+import com.pulse.pass.security.*;
 import com.pulse.pass.service.AuthService;
 
 import org.junit.jupiter.api.DisplayName;
@@ -17,17 +19,17 @@ import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
+import java.util.List;
+import java.util.Set;
+
 import static org.assertj.core.api.Assertions.assertThat;
 import static org.hamcrest.Matchers.containsString;
 import static org.hamcrest.Matchers.not;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.never;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
 
 @WebMvcTest(AuthController.class)
 @Import({GlobalExceptionHandler.class, SecurityConfig.class})
@@ -47,6 +49,12 @@ class AuthControllerTest {
 
     @MockitoBean
     private AuthService service;
+
+    @MockitoBean
+    private JwtService jwtService;
+
+    @MockitoBean
+    private CustomUserDetailsService userDetailsService;
 
     @Test
     @DisplayName("T-SEC-005: valid login returns 200 with Bearer token and expiry")
@@ -131,5 +139,89 @@ class AuthControllerTest {
                 .andExpect(jsonPath("$.details.password").value("Password is required"));
 
         verify(service, never()).login(any(LoginRequest.class));
+    }
+
+    @Test
+    @DisplayName("GET /api/auth/me returns the minimal profile of the authenticated user")
+    void shouldReturnCurrentUserWhenBearerTokenIsValid() throws Exception {
+        // ARRANGE
+        SecurityPrincipal principal = principal(true);
+        when(jwtService.validateAndExtractUserId("good-token")).thenReturn(42L);
+        when(userDetailsService.loadPrincipalById(42L)).thenReturn(principal);
+        when(service.currentUser(any(SecurityPrincipal.class)))
+                .thenReturn(new AuthenticatedUserResponse(42L, "andrea", "andrea@email.com", List.of("USER")));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer good-token"))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.id").value(42))
+                .andExpect(jsonPath("$.username").value("andrea"))
+                .andExpect(jsonPath("$.email").value("andrea@email.com"))
+                .andExpect(jsonPath("$.roles[0]").value("USER"))
+                .andExpect(jsonPath("$.password").doesNotExist())
+                .andExpect(jsonPath("$.passwordHash").doesNotExist());
+
+        verify(service).currentUser(principal);
+    }
+
+    @Test
+    @DisplayName("T-SEC-007: protected route without token returns a JSON 401")
+    void shouldReturn401WhenTokenIsMissing() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/auth/me"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(header().string("WWW-Authenticate", "Bearer"))
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$.status").value(401))
+                .andExpect(jsonPath("$.error").value("Unauthorized"))
+                .andExpect(jsonPath("$.message").value("Authentication is required"))
+                .andExpect(jsonPath("$.details").isMap())
+                .andExpect(jsonPath("$.length()").value(5));
+
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("T-SEC-008: tampered or expired token returns a JSON 401")
+    void shouldReturn401WhenTokenIsInvalid() throws Exception {
+        // ARRANGE
+        when(jwtService.validateAndExtractUserId("tampered-token")).thenThrow(new InvalidJwtException());
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer tampered-token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid or expired token"));
+
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("T-SEC-016: valid token of an inactive user returns a JSON 401")
+    void shouldReturn401WhenTokenBelongsToInactiveUser() throws Exception {
+        // ARRANGE
+        when(jwtService.validateAndExtractUserId("good-token")).thenReturn(42L);
+        when(userDetailsService.loadPrincipalById(42L)).thenReturn(principal(false));
+
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/auth/me").header("Authorization", "Bearer good-token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Invalid or expired token"));
+
+        verifyNoInteractions(service);
+    }
+
+    @Test
+    @DisplayName("FR-SEC-AUTH-007: a token sent in the query string is not accepted")
+    void shouldReturn401WhenTokenIsOnlyInQueryString() throws Exception {
+        // ACT + ASSERT
+        mockMvc.perform(get("/api/auth/me").param("access_token", "good-token"))
+                .andExpect(status().isUnauthorized())
+                .andExpect(jsonPath("$.message").value("Authentication is required"));
+
+        verifyNoInteractions(jwtService, service);
+    }
+
+    private SecurityPrincipal principal(boolean active) {
+        return new SecurityPrincipal(42L, "andrea", "andrea@email.com", null, active, Set.of(Role.USER));
     }
 }
