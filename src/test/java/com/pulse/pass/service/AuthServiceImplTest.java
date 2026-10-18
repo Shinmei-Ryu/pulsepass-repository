@@ -3,6 +3,7 @@ package com.pulse.pass.service;
 import com.pulse.pass.domain.Role;
 import com.pulse.pass.dto.request.LoginRequest;
 import com.pulse.pass.dto.response.AuthResponse;
+import com.pulse.pass.dto.response.AuthenticatedUserResponse;
 import com.pulse.pass.security.JwtService;
 import com.pulse.pass.security.SecurityPrincipal;
 import com.pulse.pass.service.impl.AuthServiceImpl;
@@ -26,6 +27,7 @@ import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
 import org.springframework.security.core.userdetails.UsernameNotFoundException;
 
+import java.util.List;
 import java.util.Set;
 import java.util.stream.Stream;
 
@@ -107,6 +109,20 @@ class AuthServiceImplTest {
         // ASSERT
         assertThat(thrown).isSameAs(failure);
         verifyNoInteractions(jwtService);
+    }
+
+    @Test
+    void currentUser_mapsPrincipalToMinimalProfileWithPlainRoleNames() {
+        // ARRANGE
+        SecurityPrincipal principal = new SecurityPrincipal(
+                42L, "andrea", "andrea@email.com", null, true, Set.of(Role.USER, Role.STAFF));
+
+        // ACT
+        AuthenticatedUserResponse result = service.currentUser(principal);
+
+        // ASSERT
+        assertThat(result).isEqualTo(
+                new AuthenticatedUserResponse(42L, "andrea", "andrea@email.com", List.of("STAFF", "USER")));
     }
 
     static Stream<AuthenticationException> authenticationFailures() {
