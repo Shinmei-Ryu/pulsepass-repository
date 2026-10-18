@@ -2,6 +2,7 @@ package com.pulse.pass.service.impl;
 
 import com.pulse.pass.dto.request.LoginRequest;
 import com.pulse.pass.dto.response.AuthResponse;
+import com.pulse.pass.dto.response.AuthenticatedUserResponse;
 import com.pulse.pass.security.JwtService;
 import com.pulse.pass.security.SecurityPrincipal;
 import com.pulse.pass.service.AuthService;
@@ -14,7 +15,10 @@ import org.springframework.security.authentication.InternalAuthenticationService
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.AuthenticationException;
+import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
+
+import java.util.List;
 
 @Service
 public class AuthServiceImpl implements AuthService {
@@ -57,5 +61,18 @@ public class AuthServiceImpl implements AuthService {
                 TOKEN_TYPE,
                 jwtService.expiresInSeconds()
         );
+    }
+
+    @Override
+    public AuthenticatedUserResponse currentUser(SecurityPrincipal principal) {
+
+        List<String> roles = principal.getAuthorities().stream()
+                .map(GrantedAuthority::getAuthority)
+                .map(authority -> authority.replaceFirst("^ROLE_", ""))
+                .sorted()
+                .toList();
+
+        return new AuthenticatedUserResponse(
+                principal.getId(), principal.getUsername(), principal.getEmail(), roles);
     }
 }
