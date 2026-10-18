@@ -14,6 +14,7 @@ import com.pulse.pass.mapper.EventMapper;
 import com.pulse.pass.repository.ArtistRepository;
 import com.pulse.pass.repository.EventRepository;
 import com.pulse.pass.repository.VenueRepository;
+import com.pulse.pass.service.AuthorizationService;
 import com.pulse.pass.service.EventService;
 
 import org.springframework.stereotype.Service;
@@ -30,13 +31,15 @@ public class EventServiceImpl implements EventService {
     private final VenueRepository venueRepository;
     private final ArtistRepository artistRepository;
     private final EventMapper mapper;
+    private final AuthorizationService authz;
 
     public EventServiceImpl(EventRepository eventRepository, VenueRepository venueRepository,
-                            ArtistRepository artistRepository, EventMapper mapper) {
+                            ArtistRepository artistRepository, EventMapper mapper, AuthorizationService authz) {
         this.eventRepository = eventRepository;
         this.venueRepository = venueRepository;
         this.artistRepository = artistRepository;
         this.mapper = mapper;
+        this.authz = authz;
     }
 
     // FR-SVC-003 / BR-EVENT-001..006
@@ -83,10 +86,12 @@ public class EventServiceImpl implements EventService {
     // FR-SVC-004
     @Override
     public EventResponse findByCode(String eventCode) {
-
         Event event = eventRepository.findByEventCode(eventCode)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found: " + eventCode));
 
+        if (event.getStatus() == EventStatus.DRAFT && !authz.isStaffOrAdmin()) {
+            throw new ResourceNotFoundException("Event not found: " + eventCode);
+        }
         return mapper.toResponse(event);
     }
 
@@ -159,9 +164,9 @@ public class EventServiceImpl implements EventService {
     // FR-SVC-008
     @Override
     public List<EventSummaryResponse> findByArtist(String stageName) {
-
-        return eventRepository.findByArtistStageName(stageName)
-                .stream()
+        boolean privileged = authz.isStaffOrAdmin();
+        return eventRepository.findByArtistStageName(stageName).stream()
+                .filter(e -> privileged || e.getStatus() != EventStatus.DRAFT)
                 .map(mapper::toSummary)
                 .toList();
     }
