@@ -1,4 +1,9 @@
 package com.pulse.pass.service;
 
-public class AuthService {
+import com.pulse.pass.dto.request.LoginRequest;
+import com.pulse.pass.dto.response.AuthResponse;
+
+public interface AuthService {
+
+    AuthResponse login(LoginRequest request);
 }
