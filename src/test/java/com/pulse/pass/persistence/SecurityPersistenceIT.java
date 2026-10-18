@@ -11,6 +11,7 @@ import com.pulse.pass.repository.UserRoleRepository;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceException;
 
+import org.hibernate.Hibernate;
 import org.junit.jupiter.api.Test;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -148,5 +149,20 @@ class SecurityPersistenceIT {
         entityManager.clear();
 
         assertThat(credentialRepository.findByUserIdentifier("legacy.login")).isEmpty();
+    }
+
+    @Test
+    void shouldFindCredentialWithUserLoadedByUserId() {
+
+        User user = userRepository.save(new User("with.user", "with.user@email.com", true));
+        credentialRepository.save(new UserCredential(user, FAKE_HASH));
+        entityManager.flush();
+        entityManager.clear();
+
+        UserCredential result = credentialRepository.findWithUserByUserId(user.getId()).orElseThrow();
+
+        assertThat(Hibernate.isInitialized(result.getUser())).isTrue();
+        assertThat(result.getUser().getUsername()).isEqualTo("with.user");
+        assertThat(credentialRepository.findWithUserByUserId(-1L)).isEmpty();
     }
 }
