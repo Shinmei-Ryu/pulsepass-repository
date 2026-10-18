@@ -17,6 +17,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.webmvc.test.autoconfigure.WebMvcTest;
 import org.springframework.context.annotation.Import;
 import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.context.bean.override.mockito.MockitoBean;
 import org.springframework.test.web.servlet.MockMvc;
 
@@ -205,6 +206,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("TEST-CTRL-USR-004: find by email returns 200")
+    @WithMockUser(roles = "USER")
     void shouldReturnUserByEmail() throws Exception {
         // ARRANGE
         when(service.findByEmail("andrea@email.com")).thenReturn(userResponse());
@@ -221,6 +223,7 @@ class UserControllerTest {
     }
 
     @Test
+    @WithMockUser(roles = "USER")
     void shouldReturn404WhenUserEmailDoesNotExist() throws Exception {
         // ARRANGE
         when(service.findByEmail("nobody@email.com"))
@@ -240,6 +243,7 @@ class UserControllerTest {
 
     @Test
     @DisplayName("TEST-CTRL-USR-005: find by username returns 200")
+    @WithMockUser(roles = "USER")
     void shouldReturnUserByUsername() throws Exception {
         // ARRANGE
         when(service.findByUsername("andrea")).thenReturn(userResponse());
