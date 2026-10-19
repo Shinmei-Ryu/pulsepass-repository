@@ -49,6 +49,7 @@ public class TicketServiceImpl implements TicketService {
 
     // FR-SVC-013 / BR-TICKET-001..009
     @Override
+    @Transactional
     @PreAuthorize("@authz.isSelf(#request.userEmail())")
     public TicketResponse purchase(PurchaseTicketRequest request) {
 
