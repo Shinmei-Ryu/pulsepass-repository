@@ -203,6 +203,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<ErrorResponse>
     handleUnexpectedException(
             Exception ex) {
+        log.error("Unexpected error on {}", currentRequest(), ex);
         HttpStatus status =
                 HttpStatus.INTERNAL_SERVER_ERROR;
         ErrorResponse error =

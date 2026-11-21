@@ -88,7 +88,8 @@ class UserControllerTest {
                 .andExpect(jsonPath("$.active").value(true))
                 .andExpect(jsonPath("$.firstName").value("Andrea"))
                 .andExpect(jsonPath("$.lastName").value("Lopez"))
-                .andExpect(jsonPath("$.city").value("Santa Marta"));
+                .andExpect(jsonPath("$.city").value("Santa Marta"))
+                .andExpect(jsonPath("$.birthDate").value("2000-05-10"));
 
         ArgumentCaptor<RegisterUserRequest> captor = ArgumentCaptor.forClass(RegisterUserRequest.class);
         verify(service).register(captor.capture());
@@ -279,6 +280,8 @@ class UserControllerTest {
     // ------------------------------------------------------------------
 
     private UserResponse userResponse() {
-        return new UserResponse(1L, "andrea", "andrea@email.com", true, "Andrea", "Lopez", "Santa Marta");
+        return new UserResponse(1L, "andrea", "andrea@email.com", true, "Andrea", "Lopez", "Santa Marta",
+                LocalDate.of(2000, 5, 10));
     }
+
 }

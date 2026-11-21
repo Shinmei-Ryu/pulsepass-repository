@@ -284,6 +284,8 @@ public class UserServiceImplTest {
     }
 
     private UserResponse userResponse() {
-        return new UserResponse(1L, USERNAME, EMAIL, true, "Andrea", "Lopez", "Santa Marta");
+        return new UserResponse(1L, USERNAME, EMAIL, true, "Andrea", "Lopez", "Santa Marta",
+                LocalDate.of(2000, 5, 10));
     }
+
 }

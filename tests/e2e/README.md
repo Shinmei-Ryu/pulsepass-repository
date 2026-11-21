@@ -16,7 +16,7 @@ y ningún secreto en el repositorio.
 | `matriz-cobertura.md` | 22 rutas × actores + trazabilidad. |
 
 ## 1. Requisitos
-- Docker Desktop (ya lo usan los tests con Testcontainers), JDK 21, Maven wrapper del proyecto y Postman (cuenta no necesaria: *Skip and go to the app*).
+- Docker Desktop (ya lo usan los tests con Testcontainers), JDK 21, Maven 3.9+ instalado (`mvn -v`) y Postman (cuenta no necesaria: *Skip and go to the app*).
 
 ## 2. Base de datos dedicada `pulsepass_e2e`
 PowerShell:
@@ -35,7 +35,8 @@ En la **misma** terminal PowerShell, desde la raíz del proyecto (las variables 
     $env:DB_URL = "jdbc:postgresql://localhost:5433/pulsepass_e2e"
     $env:DB_USER = "postgres"
     $env:DB_PASSWORD = "postgres"
-    .\mvnw.cmd spring-boot:run
+    mvn spring-boot:run
+
 
 Flyway aplica V1–V4 al arrancar. No guarde el secreto en ningún archivo. Compruebe en `http://localhost:8080/api/venues/active` (responde `[]` antes del seed).
 
