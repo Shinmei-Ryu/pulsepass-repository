@@ -4,6 +4,9 @@ API REST para descubrir eventos y administrar entradas de conciertos, festivales
 
 **Autores:** Camilo Antonio Bothia Fadul · Daniel Antonio Vergara Fernandez
 
+> **Rama de entrega:** `develop`. La rama `main` es solo un marcador reservado para un futuro pipeline de CI/CD y no contiene el proyecto.
+
+
 ---
 
 ## 1. Descripción
@@ -251,7 +254,7 @@ Los mensajes de seguridad son uniformes: `Authentication is required`, `Invalid 
 
 ## 11. Cómo ejecutar
 
-1. Tener **Java 21**, PostgreSQL accesible y las variables de la sección 10 definidas. Maven se ejecuta con el wrapper del repositorio (`mvnw`).
+1. Tener **Java 21**, PostgreSQL accesible y las variables de la sección 10 definidas. Se necesita **Maven 3.9 o superior** instalado y en el `PATH` (`mvn -v`); el repositorio no incluye el wrapper `mvnw`.
 2. Al arrancar, Flyway crea o actualiza el esquema; Hibernate solo lo valida.
 3. Para verificar el proyecto completo se usa el objetivo `clean verify`, que corre pruebas unitarias, de controlador e integración. Las pruebas de integración necesitan **Docker**, porque levantan PostgreSQL con Testcontainers; no requieren instalar PostgreSQL.
 

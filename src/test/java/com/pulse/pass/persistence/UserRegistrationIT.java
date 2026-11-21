@@ -5,6 +5,7 @@ import com.pulse.pass.domain.User;
 import com.pulse.pass.domain.UserCredential;
 import com.pulse.pass.domain.UserRole;
 import com.pulse.pass.dto.request.RegisterUserRequest;
+import com.pulse.pass.dto.response.UserResponse;
 import com.pulse.pass.repository.UserCredentialRepository;
 import com.pulse.pass.repository.UserProfileRepository;
 import com.pulse.pass.repository.UserRepository;
@@ -61,7 +62,10 @@ class UserRegistrationIT {
     @Test
     void shouldRegisterUserWithHashedCredentialAndUserRole() {
 
-        userService.register(request("atomic.ok", "atomic.ok@email.com"));
+        UserResponse created = userService.register(request("atomic.ok", "atomic.ok@email.com"));
+
+        // El mapper real (no un mock) lleva la fecha de nacimiento del perfil a la respuesta
+        assertThat(created.birthDate()).isEqualTo(LocalDate.of(1995, 4, 12));
 
         User user = userRepository.findByUsername("atomic.ok").orElseThrow();
         UserCredential credential = credentialRepository.findById(user.getId()).orElseThrow();

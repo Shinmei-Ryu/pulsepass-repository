@@ -24,6 +24,8 @@ import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.time.Period;
 import java.util.List;
+import java.util.UUID;
+
 
 @Service
 @Transactional(readOnly = true)
@@ -125,7 +127,12 @@ public class TicketServiceImpl implements TicketService {
     }
 
     private String generateTicketCode(Event event) {
-        return "TCK-" + event.getEventCode() + "-" + System.currentTimeMillis();
+        // Sufijo aleatorio: no se puede adivinar ni choca si dos compras caen en el mismo milisegundo.
+        // Se recorta el código del evento para no superar los 100 caracteres de tickets.ticket_code.
+        String eventCode = event.getEventCode();
+        String prefix = eventCode.length() > 80 ? eventCode.substring(0, 80) : eventCode;
+        String suffix = UUID.randomUUID().toString().replace("-", "").substring(0, 12).toUpperCase();
+        return "TCK-" + prefix + "-" + suffix;
     }
 
     // FR-SVC-014
