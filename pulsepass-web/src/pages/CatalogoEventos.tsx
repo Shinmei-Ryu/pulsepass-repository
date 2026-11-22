@@ -39,68 +39,77 @@ export default function CatalogoEventos() {
   }
 
   const visibles = (consulta.data ?? []).filter(
-      (evento) =>
-          evento.name.toLowerCase().includes(texto.trim().toLowerCase()) && (!categoria || evento.category === categoria),
+    (evento) =>
+      evento.name.toLowerCase().includes(texto.trim().toLowerCase()) &&
+      (!categoria || evento.category === categoria),
   )
   const hayFiltros = texto !== '' || artista !== '' || categoria !== undefined
 
   return (
-      <div className="space-y-6">
-        <h1 className={claseTitulo}>Cartelera</h1>
+    <div className="space-y-6">
+      <h1 className={claseTitulo}>Cartelera</h1>
 
-        <BarraFiltros
-            texto={texto}
-            categoria={categoria}
-            artista={artista}
-            artistas={artistas.data ?? []}
-            onTexto={(valor) => {
-              setTexto(valor)
-              cambiar('q', valor)
-            }}
-            onCategoria={(valor) => cambiar('categoria', valor)}
-            onArtista={(valor) => cambiar('artista', valor)}
-        />
+      <BarraFiltros
+        texto={texto}
+        categoria={categoria}
+        artista={artista}
+        artistas={artistas.data ?? []}
+        onTexto={(valor) => {
+          setTexto(valor)
+          cambiar('q', valor)
+        }}
+        onCategoria={(valor) => cambiar('categoria', valor)}
+        onArtista={(valor) => cambiar('artista', valor)}
+      />
 
-        {artistaElegido.data && (
-            <p className={claseTextoSuave}>
-              Eventos de{' '}
-              <Link to={RUTAS.artista(artistaElegido.data.id)} className={claseEnlace}>
-                {artistaElegido.data.stageName}
-              </Link>{' '}
-              · {artistaElegido.data.genre} · {artistaElegido.data.country}
+      {artistaElegido.data && (
+        <p className={claseTextoSuave}>
+          Eventos de{' '}
+          <Link to={RUTAS.artista(artistaElegido.data.id)} className={claseEnlace}>
+            {artistaElegido.data.stageName}
+          </Link>{' '}
+          · {artistaElegido.data.genre} · {artistaElegido.data.country}
+        </p>
+      )}
+      {esEstado(artistaElegido.error, 404) && (
+        <Aviso tipo="info">No encontramos un artista con ese nombre.</Aviso>
+      )}
+
+      {consulta.isPending && <Cargando />}
+      {consulta.isError && (
+        <EstadoError mensaje={mensajeDeError(consulta.error)} onReintentar={consulta.refetch} />
+      )}
+
+      {consulta.data && (
+        <>
+          <div className="flex items-center justify-between">
+            <p className={claseTextoSuave} aria-live="polite">
+              {visibles.length} {visibles.length === 1 ? 'evento' : 'eventos'}
             </p>
-        )}
-        {esEstado(artistaElegido.error, 404) && <Aviso tipo="info">No encontramos un artista con ese nombre.</Aviso>}
+            {hayFiltros && (
+              <Boton
+                variante="fantasma"
+                onClick={() => {
+                  setTexto('')
+                  setParams({}, { replace: true })
+                }}
+              >
+                Limpiar filtros
+              </Boton>
+            )}
+          </div>
 
-        {consulta.isPending && <Cargando />}
-        {consulta.isError && <EstadoError mensaje={mensajeDeError(consulta.error)} onReintentar={consulta.refetch} />}
-
-        {consulta.data && (
-            <>
-              <div className="flex items-center justify-between">
-                <p className={claseTextoSuave} aria-live="polite">
-                  {visibles.length} {visibles.length === 1 ? 'evento' : 'eventos'}
-                </p>
-                {hayFiltros && (
-                    <Boton
-                        variante="fantasma"
-                        onClick={() => {
-                          setTexto('')
-                          setParams({}, { replace: true })
-                        }}
-                    >
-                      Limpiar filtros
-                    </Boton>
-                )}
-              </div>
-
-              {visibles.length === 0 ? (
-                  <EstadoVacio mensaje={hayFiltros ? 'Ningún evento coincide con los filtros' : 'Aún no hay eventos publicados'} />
-              ) : (
-                  <GrillaEventos eventos={visibles} />
-              )}
-            </>
-        )}
-      </div>
+          {visibles.length === 0 ? (
+            <EstadoVacio
+              mensaje={
+                hayFiltros ? 'Ningún evento coincide con los filtros' : 'Aún no hay eventos publicados'
+              }
+            />
+          ) : (
+            <GrillaEventos eventos={visibles} />
+          )}
+        </>
+      )}
+    </div>
   )
 }

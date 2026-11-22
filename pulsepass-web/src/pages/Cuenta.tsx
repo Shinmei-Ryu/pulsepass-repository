@@ -31,45 +31,45 @@ export default function Cuenta() {
   }
 
   return (
-      <div className="mx-auto max-w-3xl space-y-4">
-        <h1 className={claseTitulo}>Mi cuenta</h1>
+    <div className="mx-auto max-w-3xl space-y-4">
+      <h1 className={claseTitulo}>Mi cuenta</h1>
 
-        <Tarjeta como="section" className="space-y-4 p-5">
-          <div className="flex items-center gap-4">
-            <AvatarArtista nombre={nombre} />
-            <div>
-              <p className="font-titulo text-lg font-semibold">{nombre}</p>
-              <p className={claseTextoSuave}>
-                @{usuarioSesion.username} · {usuarioSesion.email}
-              </p>
-            </div>
+      <Tarjeta como="section" className="space-y-4 p-5">
+        <div className="flex items-center gap-4">
+          <AvatarArtista nombre={nombre} />
+          <div>
+            <p className="font-titulo text-lg font-semibold">{nombre}</p>
+            <p className={claseTextoSuave}>
+              @{usuarioSesion.username} · {usuarioSesion.email}
+            </p>
           </div>
-
-          {porEmail.isPending && <Cargando />}
-          {porEmail.isError && <ErrorDeCarga error={porEmail.error} onReintentar={porEmail.refetch} />}
-
-          <dl>
-            <Dato etiqueta="Rol">{usuarioSesion.roles.join(', ')}</Dato>
-            {perfil?.birthDate && <Dato etiqueta="Nacimiento">{formatearFechaSimple(perfil.birthDate)}</Dato>}
-            {perfil?.city && <Dato etiqueta="Ciudad">{perfil.city}</Dato>}
-            {perfil && (
-                <Dato etiqueta="Estado">
-                  <BadgeActivo activo={perfil.active} />
-                </Dato>
-            )}
-          </dl>
-        </Tarjeta>
-
-        <div className="flex flex-wrap justify-between gap-2">
-          {tieneRol(sesion, 'USER') && (
-              <Link to={RUTAS.misTickets} className={claseBoton('primario')}>
-                Ver mis tickets
-              </Link>
-          )}
-          <Boton variante="secundario" onClick={salir}>
-            Cerrar sesión
-          </Boton>
         </div>
+
+        {porEmail.isPending && <Cargando />}
+        {porEmail.isError && <ErrorDeCarga error={porEmail.error} onReintentar={porEmail.refetch} />}
+
+        <dl>
+          <Dato etiqueta="Rol">{usuarioSesion.roles.join(', ')}</Dato>
+          {perfil?.birthDate && <Dato etiqueta="Nacimiento">{formatearFechaSimple(perfil.birthDate)}</Dato>}
+          {perfil?.city && <Dato etiqueta="Ciudad">{perfil.city}</Dato>}
+          {perfil && (
+            <Dato etiqueta="Estado">
+              <BadgeActivo activo={perfil.active} />
+            </Dato>
+          )}
+        </dl>
+      </Tarjeta>
+
+      <div className="flex flex-wrap justify-between gap-2">
+        {tieneRol(sesion, 'USER') && (
+          <Link to={RUTAS.misTickets} className={claseBoton('primario')}>
+            Ver mis tickets
+          </Link>
+        )}
+        <Boton variante="secundario" onClick={salir}>
+          Cerrar sesión
+        </Boton>
       </div>
+    </div>
   )
 }

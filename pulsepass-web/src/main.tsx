@@ -17,11 +17,11 @@ if (!raiz) throw new Error('No existe el elemento #root')
 
 // Orden de proveedores: caché → sesión → rutas. AuthProvider usa la caché; las rutas usan la sesión.
 createRoot(raiz).render(
-    <StrictMode>
-        <QueryClientProvider client={queryClient}>
-            <AuthProvider>
-                <RouterProvider router={router} />
-            </AuthProvider>
-        </QueryClientProvider>
-    </StrictMode>,
+  <StrictMode>
+    <QueryClientProvider client={queryClient}>
+      <AuthProvider>
+        <RouterProvider router={router} />
+      </AuthProvider>
+    </QueryClientProvider>
+  </StrictMode>,
 )

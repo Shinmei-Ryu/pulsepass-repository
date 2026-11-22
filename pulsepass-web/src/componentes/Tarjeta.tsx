@@ -7,17 +7,17 @@ import { claseTarjeta } from './estilos'
 type EtiquetaTarjeta = 'div' | 'article' | 'section' | 'aside' | 'header' | 'li'
 
 interface TarjetaProps {
-    children: ReactNode
-    className?: string
-    como?: EtiquetaTarjeta
-    id?: string
+  children: ReactNode
+  className?: string
+  como?: EtiquetaTarjeta
+  id?: string
 }
 
 // Contenedor visual (PRD 9.1): fondo, borde y esquinas redondeadas, en claro y oscuro
 export default function Tarjeta({ children, className, como: Etiqueta = 'div', id }: TarjetaProps) {
-    return (
-        <Etiqueta id={id} className={clsx(claseTarjeta, className)}>
-            {children}
-        </Etiqueta>
-    )
+  return (
+    <Etiqueta id={id} className={clsx(claseTarjeta, className)}>
+      {children}
+    </Etiqueta>
+  )
 }

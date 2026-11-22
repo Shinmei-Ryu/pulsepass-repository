@@ -1,6 +1,5 @@
 {
   "compilerOptions": {
-
     "strict": true,
     "noUncheckedIndexedAccess": true,
     "paths": { "@/*": ["./src/*"] },

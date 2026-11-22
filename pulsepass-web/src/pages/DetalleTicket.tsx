@@ -27,9 +27,9 @@ export default function DetalleTicket() {
   if (ticket.isError) {
     // 403 (ajeno) y 404 (no existe) se ven igual: la interfaz no revela cuál de los dos ocurrió
     return esEstado(ticket.error, 403, 404) ? (
-        <NoEncontrada titulo="Ticket no disponible" mensaje="El ticket no existe o no pertenece a tu cuenta." />
+      <NoEncontrada titulo="Ticket no disponible" mensaje="El ticket no existe o no pertenece a tu cuenta." />
     ) : (
-        <EstadoError mensaje={mensajeDeError(ticket.error)} onReintentar={ticket.refetch} />
+      <EstadoError mensaje={mensajeDeError(ticket.error)} onReintentar={ticket.refetch} />
     )
   }
 
@@ -46,51 +46,58 @@ export default function DetalleTicket() {
   }
 
   return (
-      <div className="mx-auto max-w-3xl space-y-4">
-        <Link to={RUTAS.misTickets} className={`${claseEnlace} inline-flex min-h-11 items-center gap-1 text-sm`}>
-          <IconoFlechaIzquierda className="size-4" />
-          Mis tickets
-        </Link>
+    <div className="mx-auto max-w-3xl space-y-4">
+      <Link
+        to={RUTAS.misTickets}
+        className={`${claseEnlace} inline-flex min-h-11 items-center gap-1 text-sm`}
+      >
+        <IconoFlechaIzquierda className="size-4" />
+        Mis tickets
+      </Link>
 
-        <Tarjeta como="article" className="space-y-3 p-5">
-          <div className="flex items-start justify-between gap-2">
-            <h1 className={claseTitulo}>{datos.eventName}</h1>
-            <BadgeTicket estado={datos.status} />
-          </div>
-          <dl>
-            <Dato etiqueta="Código">
-              <span className="font-mono">{datos.ticketCode}</span>
-            </Dato>
-            <Dato etiqueta="Tipo">{datos.type}</Dato>
-            <Dato etiqueta="Precio">
-              <PrecioCOP valor={datos.price} />
-            </Dato>
-            <Dato etiqueta="Comprado el">{formatearFechaHora(datos.purchaseDate)}</Dato>
-            {/* La API entrega el correo del titular, no su nombre (D5) */}
-            <Dato etiqueta="Titular">{datos.userEmail}</Dato>
-          </dl>
-          <p className={claseTextoSuave}>Presenta este código en el ingreso.</p>
-          {copiado && (
-              <Aviso tipo="exito" onCerrar={() => setCopiado(false)}>
-                Código copiado.
-              </Aviso>
-          )}
-        </Tarjeta>
-
-        <div className="flex justify-end gap-2">
-          <Boton variante="secundario" onClick={copiar}>
-            Copiar código
-          </Boton>
-          {datos.status === 'PAID' && (
-              <Boton variante="peligro" onClick={() => setCancelando(true)}>
-                Cancelar ticket
-              </Boton>
-          )}
+      <Tarjeta como="article" className="space-y-3 p-5">
+        <div className="flex items-start justify-between gap-2">
+          <h1 className={claseTitulo}>{datos.eventName}</h1>
+          <BadgeTicket estado={datos.status} />
         </div>
+        <dl>
+          <Dato etiqueta="Código">
+            <span className="font-mono">{datos.ticketCode}</span>
+          </Dato>
+          <Dato etiqueta="Tipo">{datos.type}</Dato>
+          <Dato etiqueta="Precio">
+            <PrecioCOP valor={datos.price} />
+          </Dato>
+          <Dato etiqueta="Comprado el">{formatearFechaHora(datos.purchaseDate)}</Dato>
+          {/* La API entrega el correo del titular, no su nombre (D5) */}
+          <Dato etiqueta="Titular">{datos.userEmail}</Dato>
+        </dl>
+        <p className={claseTextoSuave}>Presenta este código en el ingreso.</p>
+        {copiado && (
+          <Aviso tipo="exito" onCerrar={() => setCopiado(false)}>
+            Código copiado.
+          </Aviso>
+        )}
+      </Tarjeta>
 
-        {cancelando && (
-            <ModalConfirmarCancelacion ticket={datos} onCerrar={() => setCancelando(false)} onCancelado={() => setCancelando(false)} />
+      <div className="flex justify-end gap-2">
+        <Boton variante="secundario" onClick={copiar}>
+          Copiar código
+        </Boton>
+        {datos.status === 'PAID' && (
+          <Boton variante="peligro" onClick={() => setCancelando(true)}>
+            Cancelar ticket
+          </Boton>
         )}
       </div>
+
+      {cancelando && (
+        <ModalConfirmarCancelacion
+          ticket={datos}
+          onCerrar={() => setCancelando(false)}
+          onCancelado={() => setCancelando(false)}
+        />
+      )}
+    </div>
   )
 }

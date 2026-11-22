@@ -23,13 +23,16 @@ export default function DetalleArtista() {
   const artista = useArtista(idValido ? id : undefined)
   const eventos = useEventosPorArtista(artista.data?.stageName)
 
-  if (!idValido) return <NoEncontrada titulo="Artista no disponible" mensaje="El identificador del artista no es válido." />
+  if (!idValido)
+    return (
+      <NoEncontrada titulo="Artista no disponible" mensaje="El identificador del artista no es válido." />
+    )
   if (artista.isPending) return <Cargando />
   if (artista.isError) {
     return esEstado(artista.error, 404) ? (
-        <NoEncontrada titulo="Artista no disponible" mensaje="No encontramos este artista." />
+      <NoEncontrada titulo="Artista no disponible" mensaje="No encontramos este artista." />
     ) : (
-        <EstadoError mensaje={mensajeDeError(artista.error)} onReintentar={artista.refetch} />
+      <EstadoError mensaje={mensajeDeError(artista.error)} onReintentar={artista.refetch} />
     )
   }
 
@@ -37,34 +40,36 @@ export default function DetalleArtista() {
   if (!datos) return null
 
   return (
-      <div className="space-y-6">
-        <Link to={RUTAS.artistas} className={`${claseEnlace} inline-flex min-h-11 items-center gap-1 text-sm`}>
-          <IconoFlechaIzquierda className="size-4" />
-          Artistas
-        </Link>
+    <div className="space-y-6">
+      <Link to={RUTAS.artistas} className={`${claseEnlace} inline-flex min-h-11 items-center gap-1 text-sm`}>
+        <IconoFlechaIzquierda className="size-4" />
+        Artistas
+      </Link>
 
-        <Tarjeta como="header" className="flex items-center gap-4 p-5">
-          <AvatarArtista nombre={datos.stageName} tamano="lg" />
-          <div className="space-y-1">
-            <h1 className={claseTitulo}>{datos.stageName}</h1>
-            <p className={claseTextoSuave}>
-              {datos.genre} · {datos.country}
-            </p>
-            <BadgeActivo activo={datos.active} />
-          </div>
-        </Tarjeta>
+      <Tarjeta como="header" className="flex items-center gap-4 p-5">
+        <AvatarArtista nombre={datos.stageName} tamano="lg" />
+        <div className="space-y-1">
+          <h1 className={claseTitulo}>{datos.stageName}</h1>
+          <p className={claseTextoSuave}>
+            {datos.genre} · {datos.country}
+          </p>
+          <BadgeActivo activo={datos.active} />
+        </div>
+      </Tarjeta>
 
-        <section aria-labelledby="eventos-artista" className="space-y-4">
-          <h2 id="eventos-artista" className={claseSubtitulo}>
-            Próximos eventos de {datos.stageName}
-          </h2>
-          {eventos.isPending && <Cargando />}
-          {eventos.isError && <EstadoError mensaje={mensajeDeError(eventos.error)} onReintentar={eventos.refetch} />}
-          {eventos.data && eventos.data.length === 0 && <EstadoVacio mensaje="Este artista aún no tiene eventos" />}
-          {eventos.data && eventos.data.length > 0 && (
-              <GrillaEventos eventos={eventos.data} />
-          )}
-        </section>
-      </div>
+      <section aria-labelledby="eventos-artista" className="space-y-4">
+        <h2 id="eventos-artista" className={claseSubtitulo}>
+          Próximos eventos de {datos.stageName}
+        </h2>
+        {eventos.isPending && <Cargando />}
+        {eventos.isError && (
+          <EstadoError mensaje={mensajeDeError(eventos.error)} onReintentar={eventos.refetch} />
+        )}
+        {eventos.data && eventos.data.length === 0 && (
+          <EstadoVacio mensaje="Este artista aún no tiene eventos" />
+        )}
+        {eventos.data && eventos.data.length > 0 && <GrillaEventos eventos={eventos.data} />}
+      </section>
+    </div>
   )
 }

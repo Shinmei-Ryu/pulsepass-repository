@@ -24,9 +24,12 @@ export default function DetalleEvento() {
   if (evento.isError) {
     // GAP-02: un borrador responde 404 (o 403) a anónimos y USER; se trata igual que un código inexistente
     return esEstado(evento.error, 404, 403) ? (
-        <NoEncontrada titulo="Evento no disponible" mensaje="El evento no existe o todavía no está publicado." />
+      <NoEncontrada
+        titulo="Evento no disponible"
+        mensaje="El evento no existe o todavía no está publicado."
+      />
     ) : (
-        <EstadoError mensaje={mensajeDeError(evento.error)} onReintentar={evento.refetch} />
+      <EstadoError mensaje={mensajeDeError(evento.error)} onReintentar={evento.refetch} />
     )
   }
 
@@ -34,28 +37,28 @@ export default function DetalleEvento() {
   if (!datos) return null
 
   return (
-      <div className="space-y-4 pb-24 md:pb-0">
-        <Link to={RUTAS.eventos} className={`${claseEnlace} inline-flex min-h-11 items-center gap-1 text-sm`}>
-          <IconoFlechaIzquierda className="size-4" />
-          Volver a la cartelera
-        </Link>
+    <div className="space-y-4 pb-24 md:pb-0">
+      <Link to={RUTAS.eventos} className={`${claseEnlace} inline-flex min-h-11 items-center gap-1 text-sm`}>
+        <IconoFlechaIzquierda className="size-4" />
+        Volver a la cartelera
+      </Link>
 
-        <div className="grid gap-6 lg:grid-cols-3">
-          <Tarjeta como="article" className="overflow-hidden lg:col-span-2">
-            <DetalleEventoCabecera evento={datos} />
-            <div className="space-y-4 p-5">
-              <ListaArtistasEvento artistas={datos.artists} />
-              <section aria-labelledby="sede-evento">
-                <h2 id="sede-evento" className={claseSubtitulo}>
-                  Sede
-                </h2>
-                <TarjetaSede codigo={datos.venueCode} nombre={datos.venueName} sede={sede.data} />
-              </section>
-            </div>
-          </Tarjeta>
+      <div className="grid gap-6 lg:grid-cols-3">
+        <Tarjeta como="article" className="overflow-hidden lg:col-span-2">
+          <DetalleEventoCabecera evento={datos} />
+          <div className="space-y-4 p-5">
+            <ListaArtistasEvento artistas={datos.artists} />
+            <section aria-labelledby="sede-evento">
+              <h2 id="sede-evento" className={claseSubtitulo}>
+                Sede
+              </h2>
+              <TarjetaSede codigo={datos.venueCode} nombre={datos.venueName} sede={sede.data} />
+            </section>
+          </div>
+        </Tarjeta>
 
-          <PanelCompra evento={datos} />
-        </div>
+        <PanelCompra evento={datos} />
       </div>
+    </div>
   )
 }

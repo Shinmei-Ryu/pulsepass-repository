@@ -6,20 +6,20 @@ const CLAVE = 'pulsepass.eventosCreados'
 const CodigosSchema = z.array(z.string())
 
 export function leerEventosCreados(): string[] {
-    try {
-        const json: unknown = JSON.parse(sessionStorage.getItem(CLAVE) ?? '[]')
-        const codigos = CodigosSchema.safeParse(json)
-        return codigos.success ? codigos.data : []
-    } catch {
-        return []
-    }
+  try {
+    const json: unknown = JSON.parse(sessionStorage.getItem(CLAVE) ?? '[]')
+    const codigos = CodigosSchema.safeParse(json)
+    return codigos.success ? codigos.data : []
+  } catch {
+    return []
+  }
 }
 
 export function recordarEventoCreado(eventCode: string) {
-    try {
-        const codigos = leerEventosCreados().filter((codigo) => codigo !== eventCode)
-        sessionStorage.setItem(CLAVE, JSON.stringify([eventCode, ...codigos]))
-    } catch {
-        // sin almacenamiento, la lista simplemente no se recuerda
-    }
+  try {
+    const codigos = leerEventosCreados().filter((codigo) => codigo !== eventCode)
+    sessionStorage.setItem(CLAVE, JSON.stringify([eventCode, ...codigos]))
+  } catch {
+    // sin almacenamiento, la lista simplemente no se recuerda
+  }
 }

@@ -19,9 +19,9 @@ export default function ConfirmacionCompra() {
   if (ticket.isPending) return <Cargando />
   if (ticket.isError) {
     return esEstado(ticket.error, 403, 404) ? (
-        <NoEncontrada titulo="Ticket no disponible" mensaje="El ticket no existe o no pertenece a tu cuenta." />
+      <NoEncontrada titulo="Ticket no disponible" mensaje="El ticket no existe o no pertenece a tu cuenta." />
     ) : (
-        <EstadoError mensaje={mensajeDeError(ticket.error)} onReintentar={ticket.refetch} />
+      <EstadoError mensaje={mensajeDeError(ticket.error)} onReintentar={ticket.refetch} />
     )
   }
 
@@ -29,24 +29,25 @@ export default function ConfirmacionCompra() {
   if (!datos) return null
 
   return (
-      <Tarjeta como="section" className="mx-auto flex max-w-md flex-col items-center gap-3 p-8 text-center">
+    <Tarjeta como="section" className="mx-auto flex max-w-md flex-col items-center gap-3 p-8 text-center">
       <span className="flex size-12 items-center justify-center rounded-full bg-green-100 text-green-700">
         <IconoCheck className="size-6" />
       </span>
-        <h1 className="font-titulo text-xl font-bold">¡Compra realizada con éxito!</h1>
-        <p className="text-sm font-semibold">{datos.eventName}</p>
-        <p className={claseTextoSuave}>
-          Ticket <span className="font-mono break-all">{datos.ticketCode}</span> · {datos.type} · <PrecioCOP valor={datos.price} />
-        </p>
-        <BadgeTicket estado={datos.status} />
-        <div className="mt-2 flex flex-wrap justify-center gap-2">
-          <Link to={RUTAS.misTickets} className={claseBoton('primario')}>
-            Ver mis tickets
-          </Link>
-          <Link to={RUTAS.eventos} className={claseBoton('secundario')}>
-            Seguir explorando
-          </Link>
-        </div>
-      </Tarjeta>
+      <h1 className="font-titulo text-xl font-bold">¡Compra realizada con éxito!</h1>
+      <p className="text-sm font-semibold">{datos.eventName}</p>
+      <p className={claseTextoSuave}>
+        Ticket <span className="font-mono break-all">{datos.ticketCode}</span> · {datos.type} ·{' '}
+        <PrecioCOP valor={datos.price} />
+      </p>
+      <BadgeTicket estado={datos.status} />
+      <div className="mt-2 flex flex-wrap justify-center gap-2">
+        <Link to={RUTAS.misTickets} className={claseBoton('primario')}>
+          Ver mis tickets
+        </Link>
+        <Link to={RUTAS.eventos} className={claseBoton('secundario')}>
+          Seguir explorando
+        </Link>
+      </div>
+    </Tarjeta>
   )
 }
