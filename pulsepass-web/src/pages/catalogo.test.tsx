@@ -1,4 +1,4 @@
-import { screen, waitFor } from '@testing-library/react'
+import { act, screen, waitFor } from '@testing-library/react'
 import { http as red, HttpResponse } from 'msw'
 import { server } from '@/test/mocks/server'
 import { renderizar } from '@/test/utils'
@@ -74,11 +74,12 @@ describe('Catálogo, artistas y sedes', () => {
         const { router } = renderizar('/sedes')
         expect(await screen.findByRole('link', { name: /Marina Convention Center/ })).toBeInTheDocument()
 
-        await router.navigate('/sedes/VEN-SMR-01')
+        // act(): la navegación no viene de un clic, así que se espera explícitamente a que React dibuje
+        await act(() => router.navigate('/sedes/VEN-SMR-01'))
         expect(await screen.findByText('VEN-SMR-01')).toBeInTheDocument()
         expect(screen.getByText('3 personas')).toBeInTheDocument()
 
-        await router.navigate('/sedes/NO-EXISTE')
+        await act(() => router.navigate('/sedes/NO-EXISTE'))
         expect(await screen.findByRole('heading', { name: 'Sede no disponible' })).toBeInTheDocument()
     })
 })
