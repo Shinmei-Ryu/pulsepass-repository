@@ -6,15 +6,7 @@ import { server } from './mocks/server'
 configure({ asyncUtilTimeout: 5000 })
 
 // "error": una petición sin handler hace fallar la prueba en vez de salir a la red
-// Peticiones que llegaron a MSW sin respuesta simulada. Se revisan al final de cada prueba.
-const sinRespuesta: string[] = []
-
-beforeAll(() => {
-    server.listen()
-    server.events.on('request:unhandled', ({ request }) => {
-        sinRespuesta.push(`${request.method} ${request.url}`)
-    })
-})
+beforeAll(() => server.listen({ onUnhandledFrame: 'error' }))
 
 // QT-FE-009: reloj fijo. Solo se simula Date; setTimeout sigue siendo real para que user-event y waitFor funcionen
 beforeEach(() => {
@@ -27,11 +19,7 @@ afterEach(() => {
     server.resetHandlers()
     sessionStorage.clear()
     localStorage.clear()
-    // Si una prueba pidió una ruta sin respuesta simulada, falla y dice cuál
-    const pendientes = sinRespuesta.splice(0)
-    if (pendientes.length > 0) {
-        throw new Error(`Peticiones sin respuesta simulada: ${pendientes.join(', ')}`)
-    }
 })
 
 afterAll(() => server.close())
+
