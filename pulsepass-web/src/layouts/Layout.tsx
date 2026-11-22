@@ -14,8 +14,12 @@ export default function Layout() {
     // también desde una página pública. AuthProvider vive fuera del enrutador: por eso se navega aquí.
     useEffect(() => {
         if (motivoCierre !== 'expirada') return
-        olvidarMotivo()
-        if (location.pathname === RUTAS.login) return
+        // El motivo se olvida solo cuando ya se llegó a /login. Si se olvidara antes, RutaProtegida se volvería
+        // a dibujar sin él y su <Navigate> mandaría a /login otra vez, sin el aviso, ganándole a esta navegación.
+        if (location.pathname === RUTAS.login) {
+            olvidarMotivo()
+            return
+        }
         navigate(RUTAS.login, {
             replace: true,
             state: { desde: location.pathname + location.search, motivo: 'expirada' },
@@ -42,3 +46,4 @@ export default function Layout() {
         </div>
     )
 }
+
